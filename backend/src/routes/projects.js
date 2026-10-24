@@ -111,7 +111,7 @@ projectsRouter.patch('/:id', requireAuth, async (req, res, next) => {
     const existing = await prisma.project.findUnique({ where: { id: req.params.id } })
     if (!existing) return res.status(404).json({ message: 'Projet introuvable.' })
     const user = await prisma.user.findUnique({ where: { id: req.userId }, select: { role: true } })
-    if (existing.authorId !== req.userId && !['admin', 'moderator'].includes(user?.role)) {
+    if (existing.authorId !== req.userId && user?.role !== 'admin') {
       return res.status(403).json({ message: 'Tu ne peux modifier que tes propres projets.' })
     }
     const parsed = projectSchema.partial().safeParse(req.body)
@@ -135,7 +135,7 @@ projectsRouter.delete('/:id', requireAuth, async (req, res, next) => {
     const existing = await prisma.project.findUnique({ where: { id: req.params.id } })
     if (!existing) return res.status(404).json({ message: 'Projet introuvable.' })
     const user = await prisma.user.findUnique({ where: { id: req.userId }, select: { role: true } })
-    if (existing.authorId !== req.userId && !['admin', 'moderator'].includes(user?.role)) {
+    if (existing.authorId !== req.userId && user?.role !== 'admin') {
       return res.status(403).json({ message: 'Tu ne peux supprimer que tes propres projets.' })
     }
     await prisma.project.delete({ where: { id: existing.id } })
