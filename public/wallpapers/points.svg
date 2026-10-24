@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <pattern id="d" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.6" fill="#3B7DFB" fill-opacity="0.35"/>
+    </pattern>
+    <radialGradient id="v" cx="50%" cy="50%" r="70%">
+      <stop offset="0.4" stop-color="#0A0E14" stop-opacity="0"/>
+      <stop offset="1" stop-color="#0A0E14" stop-opacity="1"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="800" fill="#0A0E14"/>
+  <rect width="1200" height="800" fill="url(#d)"/>
+  <rect width="1200" height="800" fill="url(#v)"/>
+</svg>

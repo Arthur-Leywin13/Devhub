@@ -1,0 +1,350 @@
+DEVHUB — CE QUE LA BASE DE DONNEES / LE BACKEND DOIT COMPORTER
+================================================================
+(Détail des endpoints et des formats JSON : voir BACKEND.md)
+
+Liste des TABLES / COLLECTIONS à créer, leurs champs et leurs relations.
+Les compteurs (likes_count, comments_count...) sont dénormalisés pour la
+performance : le backend doit les recalculer à chaque ajout/suppression.
+
+
+1. USERS
+---------
+- id (clé primaire)
+- username (unique, utilisé dans /profil/:username)
+- name
+- email (unique, PRIVE — jamais renvoyé publiquement)
+- password_hash (NULL possible pour un compte créé uniquement via OAuth)
+- avatar_url
+- bio
+- role : "user" | "creator" | "moderator" | "admin"
+- status : "active" (défaut) | "suspended" | "banned"
+- status_reason (nullable — motif de la sanction en cours, visible par l'utilisateur)
+- suspended_until (nullable — fin de la suspension ; passé = redevient "active")
+- followers_count
+- following_count
+- created_at
+
+1bis. USER_IDENTITIES (connexion Google / GitHub)
+- id
+- user_id -> Users.id
+- provider : "google" | "github"
+- provider_user_id (identifiant chez le fournisseur)
+- email (email vérifié renvoyé par le fournisseur)
+- created_at
+Unique : (provider, provider_user_id).
+Un même utilisateur peut avoir plusieurs identités (mot de passe + Google + GitHub).
+
+
+2. FOLLOWS
+-----------
+- id
+- follower_id -> Users.id
+- following_id -> Users.id
+- created_at
+Unique : (follower_id, following_id).
+
+
+3. PROJECTS
+------------
+- id
+- slug (unique)
+- name (max 80)
+- description (résumé court)
+- long_description (max 5000)
+- image_url (couverture : première image, ou image par défaut)
+- author_id -> Users.id
+- category
+- github_url (nullable, http/https validé)
+- demo_url (nullable, http/https validé)
+- licence : "Aucune" (défaut) | "MIT" | "Apache 2.0" | "GPL v3" | "Propriétaire"
+- allow_download (booléen)
+- likes_count, comments_count, stars_count
+- created_at
+
+3bis. PROJECT_TECHNOLOGIES (jointure)
+- project_id -> Projects.id
+- technology_id -> Technologies.id
+
+3ter. PROJECT_MEDIA (galerie et vidéo du projet)
+- id
+- project_id -> Projects.id
+- type : "image" | "video"
+- url
+- position (ordre ; la position 0 des images = couverture)
+Un projet : 0 à 6 images, 0 ou 1 vidéo.
+
+3quater. PROJECT_FILES (fichiers téléchargeables)
+- id
+- project_id -> Projects.id
+- name
+- size_bytes
+- url
+Maximum 5 fichiers par projet, 100 Mo chacun.
+
+
+4. ARTICLES
+------------
+- id, slug (unique), title, excerpt, content, category
+- author_id -> Users.id
+- image_url
+- read_time (minutes)
+- likes_count, comments_count
+- created_at
+
+
+5. COURSES
+-----------
+- id, slug (unique), title, description, image_url
+- author_id -> Users.id
+- category
+- level : "Débutant" | "Intermédiaire" | "Avancé"
+- students_count
+- created_at
+
+5bis. COURSE_SECTIONS
+- id
+- course_id -> Courses.id
+- title
+- position
+
+5ter. LESSONS
+- id
+- section_id -> Course_Sections.id
+- title
+- type : "VIDEO" | "TEXT" | "VIDEO_TEXT"
+- video_url (nullable — fournie par le créateur via upload)
+- content (nullable — texte de la leçon, types TEXT / VIDEO_TEXT)
+- duration_min (nullable)
+- position
+
+5quater. LESSON_PROGRESS
+- id
+- user_id -> Users.id
+- course_id -> Courses.id
+- lesson_id -> Lessons.id
+- completed_at
+Unique : (user_id, lesson_id). Pourcentage = leçons complétées / total du cours.
+
+
+6. POSTS (fil d'actualité)
+----------------------------
+- id
+- author_id -> Users.id
+- content (max 2000, peut être vide si média ou lien)
+- image_url (nullable)
+- video_url (nullable) — image et vidéo sont mutuellement exclusives
+- link_url (nullable, http/https)
+- link_title, link_description, link_image_url (nullable — aperçu OpenGraph
+  récupéré par le SERVEUR, avec protection SSRF)
+- linked_project_id -> Projects.id (nullable)
+- linked_article_id -> Articles.id (nullable)
+- likes_count, comments_count
+- created_at
+Une publication a une page dédiée (/publications/:id) : GET /posts/:id.
+
+
+7. COMMENTS (génériques)
+--------------------------
+- id
+- target_type : "project" | "article" | "post"
+- target_id
+- author_id -> Users.id
+- text (max 1000)
+- created_at
+Suppression : par l'auteur, ou par un modérateur/admin.
+À chaque insertion/suppression, recalculer comments_count du contenu visé.
+
+
+8. LIKES
+---------
+- id
+- user_id -> Users.id
+- target_type : "project" | "article" | "post"
+- target_id
+- created_at
+Unique : (user_id, target_type, target_id). Recalculer likes_count.
+
+
+9. SAVED (enregistrés)
+------------------------
+- id
+- user_id -> Users.id
+- target_type : "project" | "article" | "post"
+- target_id
+- created_at
+Unique : (user_id, target_type, target_id).
+
+
+10. NOTIFICATIONS
+-------------------
+- id
+- user_id -> Users.id (destinataire)
+- type : "like" | "comment" | "follow" | "mention" | "course" |
+         "warning" | "suspension" | "restore"
+- actor_id -> Users.id (NULL pour les types de modération : l'identité du
+  modérateur n'est jamais exposée à l'utilisateur sanctionné)
+- target_label (texte libre, nullable)
+- read (booléen)
+- created_at
+
+
+11. TECHNOLOGIES
+------------------
+- id, name, color (hex)
+
+
+12. CATEGORIES (encyclopédie)
+-------------------------------
+- id, name, icon (nom d'icône Lucide), description, article_count
+Liste non figée : un admin doit pouvoir en ajouter.
+
+
+13. CONVERSATIONS (messagerie privée)
+---------------------------------------
+- id
+- wallpaper_url (nullable : NULL = fond par défaut ; ou "/wallpapers/<nom>.svg"
+  pour un fond fourni avec le frontend ; ou URL d'une image uploadée)
+- updated_at (date du dernier message)
+
+13bis. CONVERSATION_PARTICIPANTS
+- conversation_id -> Conversations.id
+- user_id -> Users.id
+- cleared_at (nullable — « supprimer la conversation pour moi » : les messages
+  antérieurs à cette date ne sont plus montrés à ce participant uniquement)
+(toujours 2 lignes par conversation privée ; seuls les participants y accèdent)
+
+13ter. MESSAGES
+- id
+- conversation_id -> Conversations.id
+- sender_id -> Users.id
+- text (max 4000)
+- created_at
+- read (booléen)
+- edited_at (nullable — message modifié : le frontend affiche « modifié »)
+- deleted_at (nullable — si renseigné : text vidé et pièces jointes supprimées ;
+  l'API ne renvoie plus jamais le contenu)
+
+13quater. MESSAGE_ATTACHMENTS
+- id
+- message_id -> Messages.id
+- type : "image" | "audio" | "video" | "gif" | "sticker"
+- url (nullable — image/audio/video/gif)
+- content (nullable — sticker : emoji, ou URL de l'image du sticker)
+- sticker_type (nullable — "emoji" | "image", si type = "sticker")
+- name
+
+
+14. STICKERS
+-------------
+- id
+- author_id -> Users.id (NULL = fourni par la plateforme, visible par tous)
+- type : "emoji" | "image"
+- content (caractère emoji, ou URL de l'image)
+- name
+- created_at
+Chaque utilisateur peut créer les siens et les supprimer.
+
+
+15. GIFS
+---------
+- id
+- author_id -> Users.id (NULL = fourni par la plateforme)
+- url (fichier .gif uploadé, 15 Mo max)
+- name
+- created_at
+La bibliothèque démarre vide ; elle se remplit par les créations des utilisateurs.
+
+
+16. FILES (tous les uploads)
+------------------------------
+Chaque fichier envoyé via POST /uploads est enregistré ici, puis son URL est
+réutilisée dans les autres tables.
+- id
+- owner_id -> Users.id
+- purpose : avatar | project-image | project-video | project-file | post-media |
+            chat-attachment | sticker | gif | wallpaper | lesson-video | generic
+- url (stockage final : S3 / Cloudinary / disque derrière un CDN)
+- mime_type
+- size_bytes
+- created_at
+Limites : image 10 Mo, GIF 15 Mo, audio 25 Mo, vidéo 100 Mo, fichier 100 Mo.
+Pas de SVG utilisateur (risque XSS). Vérifier le type réel du fichier.
+Supprimer les fichiers d'un utilisateur quand son compte est supprimé.
+
+
+17. REPORTS (signalements)
+---------------------------
+- id
+- reporter_id -> Users.id
+- target_type : "user" | "project" | "article" | "post" | "comment" | "message" | "course"
+- target_id
+- reason : "spam" | "harassment" | "inappropriate" | "impersonation" | "illegal" | "other"
+- details (nullable, max 500)
+- context (nullable, JSON — ex. { "conversationId": "..." } pour un message)
+- snapshot (nullable, JSON — COPIE du message signalé : texte, types de pièces
+  jointes, auteur, date ; indispensable car le message peut être modifié ou
+  supprimé ensuite)
+- status : "open" | "resolved" | "dismissed"
+- resolution : "none" | "delete_content" | "warn" | "suspend" | "ban" (nullable)
+- resolved_by -> Users.id (nullable)
+- resolved_at (nullable)
+- note (nullable — motif/note du modérateur)
+- created_at
+Index : (status, created_at).
+
+
+18. WARNINGS (avertissements)
+-------------------------------
+- id
+- user_id -> Users.id (destinataire)
+- moderator_id -> Users.id
+- reason (max 500)
+- created_at
+- acknowledged_at (nullable — l'utilisateur doit confirmer l'avoir lu)
+Le moderator_id n'est jamais renvoyé à l'utilisateur concerné.
+
+
+19. AUDIT_LOG (journal de modération — écriture seule)
+--------------------------------------------------------
+- id
+- actor_id -> Users.id (qui a agi)
+- action : "warn" | "suspend" | "ban" | "unsuspend" | "unban" | "role_change" |
+           "delete_content" | "report_resolved" | "report_dismissed"
+- target_user_id -> Users.id (nullable)
+- target_type, target_id (nullable — contenu, signalement...)
+- reason (nullable)
+- metadata (nullable, JSON — durée de suspension, ancien/nouveau rôle, action...)
+- created_at
+Jamais modifiable ni supprimable depuis l'API ; à conserver même si le compte
+sanctionné est supprimé.
+
+
+RESUME DES RELATIONS
+======================
+Users 1--N Projects (--N Project_Media, --N Project_Files, N--N Technologies)
+Users 1--N Articles
+Users 1--N Courses 1--N Course_Sections 1--N Lessons
+Users 1--N Posts
+Users 1--N Comments (sur projets, articles, publications)
+Users N--N Users (Follows)
+Users N--N Projects / Articles / Posts (Likes, Saved)
+Users 1--N Notifications (destinataire)
+Users 1--N User_Identities (Google, GitHub)
+Users N--N Conversations (Conversation_Participants)
+Conversations 1--N Messages 1--N Message_Attachments
+Users 1--N Stickers, Gifs, Files (créés / envoyés)
+Users 1--N Reports (signalant) · Users 1--N Warnings (destinataire) · Users 1--N Audit_Log (acteur)
+
+
+A PREVOIR DES MAINTENANT
+==========================
+- Pagination sur toutes les listes (page/limit ou curseur).
+- Champ "role" sur Users (aucune interface admin/modérateur n'existe encore).
+- BLOCKS (utilisateurs qui en bloquent d'autres) : pas encore utilisé par le
+  frontend, mais indispensable pour une plateforme communautaire.
+- Règles de permissions de l'administration : voir BACKEND.md section 16
+  (rangs, bannir/changer un rôle = admin, jamais soi-même ni un rang égal).
+- Index : users.username, users.email, projects.slug, articles.slug,
+  courses.slug, (target_type, target_id) sur comments / likes / saved,
+  messages(conversation_id, created_at).
+- Recherche : index plein texte sur projets, articles, cours, utilisateurs.
