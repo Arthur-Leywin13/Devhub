@@ -14,10 +14,14 @@ Ce dossier contient le début du backend réel de DevHub. Il complète le fronte
 
 Ce n'est pas encore le backend complet : articles, cours, publications, commentaires, messagerie, notifications, uploads, OAuth et administration restent à implémenter. Les contrôles de modération et les permissions devront être complétés et testés avant une mise en production.
 
+## Démarrer dans GitHub Codespaces sans fichier .env
+
+Pour éviter de créer un fichier contenant les secrets, suis le guide [CODESPACES.md](./CODESPACES.md). Il explique comment enregistrer les variables dans **GitHub Settings → Codespaces → Secrets**, puis lancer le backend. Les variables secrètes sont injectées dans l'environnement du Codespace et ne doivent pas être ajoutées au dépôt.
+
 ## Installation locale
 
 1. Installer Node.js 20 ou plus récent.
-2. Copier `.env.example` vers `.env` et renseigner les URL Supabase.
+2. Copier `.env.example` vers `.env` et renseigner les URL Supabase localement. Ne jamais committer `.env`.
 3. Depuis ce dossier :
 
 ```bash
@@ -32,7 +36,7 @@ npm run dev
 
 ## Supabase
 
-Dans Supabase, ouvre **Project Settings → Database** et récupère les paramètres PostgreSQL. Utilise une URL compatible Prisma pour `DATABASE_URL` et `DIRECT_URL`, puis les paramètres du **Session Pooler** pour `SESSION_DATABASE_URL`. Ne publie jamais ces URL : elles peuvent contenir le mot de passe de la base.
+Dans Supabase, ouvre **Connect → Session pooler** pour récupérer l'URI PostgreSQL. Utilise des URL compatibles Prisma pour `DATABASE_URL` et `DIRECT_URL`, puis les paramètres du Session Pooler pour `SESSION_DATABASE_URL`. Pour le premier test, le guide Codespaces explique comment utiliser l'URI Session Pooler pour les trois variables. Ne publie jamais ces URL : elles peuvent contenir le mot de passe de la base.
 
 Pour le déploiement, configure les variables dans les paramètres privés de l'hébergeur. Définis `NODE_ENV=production`, un `SESSION_SECRET` aléatoire d'au moins 32 caractères et l'origine exacte du frontend dans `FRONTEND_URL`. HTTPS est obligatoire en production.
 
