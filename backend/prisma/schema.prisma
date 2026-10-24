@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  user
+  creator
+  moderator
+  admin
+}
+
+enum UserStatus {
+  active
+  suspended
+  banned
+}
+
+model User {
+  id             String     @id @default(uuid()) @db.Uuid
+  username       String     @unique @db.VarChar(30)
+  name           String     @db.VarChar(80)
+  email          String     @unique @db.VarChar(254)
+  passwordHash   String?    @map("password_hash")
+  avatarUrl      String?    @map("avatar_url")
+  bio            String     @default("") @db.VarChar(500)
+  role           UserRole   @default(user)
+  status         UserStatus @default(active)
+  statusReason   String?    @map("status_reason")
+  suspendedUntil DateTime?  @map("suspended_until")
+  followersCount Int        @default(0) @map("followers_count")
+  followingCount Int        @default(0) @map("following_count")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+  projects       Project[]
+
+  @@map("users")
+}
+
+model Project {
+  id              String   @id @default(uuid()) @db.Uuid
+  slug            String   @unique @db.VarChar(120)
+  name            String   @db.VarChar(80)
+  description     String   @db.VarChar(300)
+  longDescription String   @default("") @map("long_description") @db.VarChar(5000)
+  image           String   @default("")
+  images          String[] @default([])
+  video           String?
+  files           Json     @default("[]")
+  authorId        String   @map("author_id") @db.Uuid
+  author          User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  tech            String[] @default([])
+  category        String   @default("Autre") @db.VarChar(80)
+  github          String?
+  demo            String?
+  licence         String   @default("Aucune") @db.VarChar(40)
+  allowDownload   Boolean  @default(false) @map("allow_download")
+  likesCount      Int      @default(0) @map("likes_count")
+  commentsCount   Int      @default(0) @map("comments_count")
+  stars           Int      @default(0)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([authorId])
+  @@index([category])
+  @@index([createdAt])
+  @@map("projects")
+}
