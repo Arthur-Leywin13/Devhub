@@ -88,7 +88,8 @@ authRouter.get('/me', async (req, res, next) => {
       where: { id: req.session.userId },
       select: publicUserSelect,
     })
-    if (!user || user.status === 'banned') return res.status(401).json({ message: 'Session invalide.' })
+    if (!user) return res.status(401).json({ message: 'Session invalide.' })
+    // BACKEND.md : /auth/me renvoie l'état banned pour afficher l'écran dédié.
     res.json(user)
   } catch (error) {
     next(error)
