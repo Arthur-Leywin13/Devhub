@@ -9,6 +9,8 @@ import { env } from './config/env.js'
 import { healthRouter } from './routes/health.js'
 import { authRouter } from './routes/auth.js'
 import { projectsRouter } from './routes/projects.js'
+import { usersRouter } from './routes/users.js'
+import { searchRouter } from './routes/search.js'
 
 const app = express()
 const PgStore = pgSession(session)
@@ -73,6 +75,8 @@ app.get('/', (_req, res) => res.json({ name: 'DevHub API', status: 'running' }))
 app.use('/health', healthRouter)
 app.use('/auth', authRouter)
 app.use('/projects', projectsRouter)
+app.use('/users', usersRouter)
+app.use('/search', searchRouter)
 
 app.use((req, res) => res.status(404).json({ message: 'Route API introuvable.' }))
 app.use((err, _req, res, _next) => {
