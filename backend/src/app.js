@@ -11,6 +11,7 @@ import { authRouter } from './routes/auth.js'
 import { projectsRouter } from './routes/projects.js'
 import { usersRouter } from './routes/users.js'
 import { searchRouter } from './routes/search.js'
+import { conversationsRouter } from './routes/conversations.js'
 
 const app = express()
 const PgStore = pgSession(session)
@@ -77,6 +78,7 @@ app.use('/auth', authRouter)
 app.use('/projects', projectsRouter)
 app.use('/users', usersRouter)
 app.use('/search', searchRouter)
+app.use('/conversations', conversationsRouter)
 
 app.use((req, res) => res.status(404).json({ message: 'Route API introuvable.' }))
 app.use((err, _req, res, _next) => {
