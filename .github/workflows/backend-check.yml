@@ -1,0 +1,36 @@
+name: Backend checks
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-check.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-check.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      NODE_ENV: test
+      DATABASE_URL: "postgresql://postgres:example-password@localhost:5432/devhub?schema=public"
+      DIRECT_URL: "postgresql://postgres:example-password@localhost:5432/devhub?schema=public"
+      SESSION_DATABASE_URL: "postgresql://postgres:example-password@localhost:5432/devhub?schema=public"
+      FRONTEND_URL: "http://localhost:5173"
+      SESSION_SECRET: "ci-only-secret-that-is-long-enough-for-validation-123"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npm run check
+      - run: npm run db:generate
+      - run: npx prisma validate
