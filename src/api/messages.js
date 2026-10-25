@@ -6,7 +6,7 @@ import { messagesMock } from '../mocks/messages.mock'
 function mapMessage(message) {
   return {
     ...message,
-    text: message.deletedAt ? '' : (message.body ?? message.text ?? ''),
+    text: message.deletedAt ? 'Message supprimé' : (message.body ?? message.text ?? ''),
     attachments: message.attachments || [],
   }
 }
