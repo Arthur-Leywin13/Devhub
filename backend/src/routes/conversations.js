@@ -149,7 +149,7 @@ conversationsRouter.get('/:conversationId/messages', async (req, res, next) => {
     const messages = await prisma.message.findMany({
       where: { conversationId: req.params.conversationId },
       ...(before ? { cursor: { id: before }, skip: 1 } : {}),
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: limit,
       include: { sender: { select: publicUserSelect } },
     })
@@ -188,6 +188,7 @@ conversationsRouter.post('/:conversationId/messages', async (req, res, next) => 
 // Seul l'auteur peut modifier son message; la route ne révèle pas les messages d'autres comptes.
 conversationsRouter.patch('/messages/:messageId', async (req, res, next) => {
   try {
+    if (!isUuid(req.params.messageId)) return res.status(400).json({ message: 'Identifiant de message invalide.' })
     const parsed = messageSchema.safeParse(req.body)
     if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0]?.message || 'Message invalide.' })
     const existing = await prisma.message.findFirst({
@@ -212,6 +213,7 @@ conversationsRouter.patch('/messages/:messageId', async (req, res, next) => {
 // Suppression logique : conserve le fil de discussion sans exposer le contenu supprimé.
 conversationsRouter.delete('/messages/:messageId', async (req, res, next) => {
   try {
+    if (!isUuid(req.params.messageId)) return res.status(400).json({ message: 'Identifiant de message invalide.' })
     const existing = await prisma.message.findFirst({
       where: {
         id: req.params.messageId,
