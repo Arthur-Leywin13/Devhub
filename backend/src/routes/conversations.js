@@ -1,17 +1,11 @@
 import { Router } from 'express'
-import { z } from 'zod'
+import { directConversationSchema, isUuid, messageSchema } from '../validation/conversations.js'
 import { prisma } from '../db/prisma.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 
 export const conversationsRouter = Router()
 conversationsRouter.use(requireAuth)
 
-const messageSchema = z.object({
-  body: z.string().trim().min(1, 'Le message ne peut pas être vide.').max(5000, 'Le message est trop long.'),
-})
-const directConversationSchema = z.object({
-  userId: z.string().uuid('Identifiant utilisateur invalide.'),
-})
 const publicUserSelect = {
   id: true, username: true, name: true, avatarUrl: true, role: true,
 }
@@ -31,9 +25,6 @@ function serializeMessage(message) {
   }
 }
 
-function isUuid(value) {
-  return z.string().uuid().safeParse(value).success
-}
 
 // Liste les conversations auxquelles l'utilisateur connecté participe.
 conversationsRouter.get('/', async (req, res, next) => {
