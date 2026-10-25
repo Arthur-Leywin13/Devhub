@@ -11,6 +11,8 @@ Ce fichier distingue le code présent dans la branche `feat/search-users-messagi
 - [x] Protéger les routes de messagerie par session et vérifier l'appartenance à la conversation.
 - [x] Relier l'adaptateur frontend de messagerie à l'API réelle pour les conversations et messages texte.
 - [x] Faire échouer explicitement les pièces jointes et fonds d'écran en mode API réel tant que leur backend n'existe pas, plutôt que d'appeler des routes inexistantes.
+- [x] Valider les UUID de conversation et les curseurs de pagination, et vérifier qu'un curseur appartient bien à la conversation demandée.
+- [x] Ajouter des tests unitaires pour les validations des messages et identifiants.
 - [x] Ajouter les contrôles CI backend et un build frontend.
 
 ## Routes de messagerie
@@ -27,7 +29,7 @@ Ce fichier distingue le code présent dans la branche `feat/search-users-messagi
 
 ## Vérifications restantes avant la production
 
-- [ ] Vérifier le résultat CI après les derniers changements frontend/backend.
+- [ ] Vérifier le résultat CI après les derniers changements frontend/backend, y compris les nouveaux tests unitaires.
 - [ ] Exécuter les tests d'intégration avec deux ou trois comptes : accès non autorisé, membres, compte suspendu/banni, création simultanée, pagination, édition/suppression.
 - [ ] Appliquer le schéma uniquement sur une base de test vérifiée et sauvegardée.
 - [ ] Déployer le backend sur un environnement de test puis connecter le frontend à l'API de test.
