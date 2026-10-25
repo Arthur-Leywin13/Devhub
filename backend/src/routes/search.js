@@ -8,13 +8,14 @@ export const searchRouter = Router()
 searchRouter.get('/', async (req, res, next) => {
   try {
     const query = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 80) : ''
-    const category = typeof req.query.category === 'string' ? req.query.category.slice(0, 80) : ''
+    const category = typeof req.query.category === 'string' ? req.query.category.trim().slice(0, 80) : ''
     if (query.length < 1) {
       return res.json({ projects: [], articles: [], users: [], technologies: [], courses: [] })
     }
     const [projects, users] = await Promise.all([
       prisma.project.findMany({
         where: {
+          author: { is: { status: 'active' } },
           ...(category ? { category } : {}),
           OR: [
             { name: { contains: query, mode: 'insensitive' } },
