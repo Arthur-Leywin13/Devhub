@@ -31,6 +31,10 @@ function serializeMessage(message) {
   }
 }
 
+function isUuid(value) {
+  return z.string().uuid().safeParse(value).success
+}
+
 // Liste les conversations auxquelles l'utilisateur connecté participe.
 conversationsRouter.get('/', async (req, res, next) => {
   try {
@@ -105,6 +109,7 @@ conversationsRouter.post('/', async (req, res, next) => {
 // Récupère les métadonnées d'une conversation privée.
 conversationsRouter.get('/:conversationId', async (req, res, next) => {
   try {
+    if (!isUuid(req.params.conversationId)) return res.status(400).json({ message: 'Identifiant de conversation invalide.' })
     const conversation = await prisma.conversation.findFirst({
       where: {
         id: req.params.conversationId,
@@ -122,6 +127,7 @@ conversationsRouter.get('/:conversationId', async (req, res, next) => {
 // Retire la conversation de la liste de l'utilisateur courant, sans effacer celle de l'autre participant.
 conversationsRouter.delete('/:conversationId', async (req, res, next) => {
   try {
+    if (!isUuid(req.params.conversationId)) return res.status(400).json({ message: 'Identifiant de conversation invalide.' })
     const membership = await prisma.conversationParticipant.findUnique({
       where: { conversationId_userId: { conversationId: req.params.conversationId, userId: req.userId } },
       select: { id: true },
@@ -135,11 +141,20 @@ conversationsRouter.delete('/:conversationId', async (req, res, next) => {
 // Lit les messages. Le contrôle de participation empêche l'accès aux conversations privées d'autrui.
 conversationsRouter.get('/:conversationId/messages', async (req, res, next) => {
   try {
+    if (!isUuid(req.params.conversationId)) return res.status(400).json({ message: 'Identifiant de conversation invalide.' })
     if (!await isParticipant(req.params.conversationId, req.userId)) {
       return res.status(404).json({ message: 'Conversation introuvable.' })
     }
     const limit = Math.min(Math.max(Number(req.query.limit) || 30, 1), 100)
     const before = typeof req.query.before === 'string' ? req.query.before : null
+    if (before && !isUuid(before)) return res.status(400).json({ message: 'Curseur de pagination invalide.' })
+    if (before) {
+      const cursorMessage = await prisma.message.findFirst({
+        where: { id: before, conversationId: req.params.conversationId },
+        select: { id: true },
+      })
+      if (!cursorMessage) return res.status(400).json({ message: 'Le curseur ne correspond pas à cette conversation.' })
+    }
     const messages = await prisma.message.findMany({
       where: { conversationId: req.params.conversationId },
       ...(before ? { cursor: { id: before }, skip: 1 } : {}),
@@ -154,6 +169,7 @@ conversationsRouter.get('/:conversationId/messages', async (req, res, next) => {
 // Envoie un message dans une conversation existante.
 conversationsRouter.post('/:conversationId/messages', async (req, res, next) => {
   try {
+    if (!isUuid(req.params.conversationId)) return res.status(400).json({ message: 'Identifiant de conversation invalide.' })
     const parsed = messageSchema.safeParse(req.body)
     if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0]?.message || 'Message invalide.' })
     if (!await isParticipant(req.params.conversationId, req.userId)) {
@@ -226,6 +242,7 @@ conversationsRouter.delete('/messages/:messageId', async (req, res, next) => {
 // Marque la conversation comme lue pour l'utilisateur courant.
 conversationsRouter.patch('/:conversationId/read', async (req, res, next) => {
   try {
+    if (!isUuid(req.params.conversationId)) return res.status(400).json({ message: 'Identifiant de conversation invalide.' })
     const updated = await prisma.conversationParticipant.updateMany({
       where: { conversationId: req.params.conversationId, userId: req.userId },
       data: { lastReadAt: new Date() },
