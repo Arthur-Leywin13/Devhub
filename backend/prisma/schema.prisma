@@ -22,24 +22,40 @@ enum UserStatus {
 }
 
 model User {
-  id             String     @id @default(uuid()) @db.Uuid
-  username       String     @unique @db.VarChar(30)
-  name           String     @db.VarChar(80)
-  email          String     @unique @db.VarChar(254)
-  passwordHash   String?    @map("password_hash")
-  avatarUrl      String?    @map("avatar_url")
-  bio            String     @default("") @db.VarChar(500)
-  role           UserRole   @default(user)
-  status         UserStatus @default(active)
-  statusReason   String?    @map("status_reason")
-  suspendedUntil DateTime?  @map("suspended_until")
-  followersCount Int        @default(0) @map("followers_count")
-  followingCount Int        @default(0) @map("following_count")
-  createdAt      DateTime   @default(now()) @map("created_at")
-  updatedAt      DateTime   @updatedAt @map("updated_at")
+  id             String       @id @default(uuid()) @db.Uuid
+  username       String       @unique @db.VarChar(30)
+  name           String       @db.VarChar(80)
+  email          String       @unique @db.VarChar(254)
+  passwordHash   String?      @map("password_hash")
+  avatarUrl      String?      @map("avatar_url")
+  bio            String       @default("") @db.VarChar(500)
+  role           UserRole     @default(user)
+  status         UserStatus   @default(active)
+  statusReason   String?      @map("status_reason")
+  suspendedUntil DateTime?    @map("suspended_until")
+  followersCount Int          @default(0) @map("followers_count")
+  followingCount Int          @default(0) @map("following_count")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
   projects       Project[]
+  following      UserFollow[] @relation("UserFollowing")
+  followers      UserFollow[] @relation("UserFollowers")
 
+  @@index([name])
   @@map("users")
+}
+
+model UserFollow {
+  id          String   @id @default(uuid()) @db.Uuid
+  followerId  String   @map("follower_id") @db.Uuid
+  followingId String   @map("following_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+  follower    User     @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followingId, createdAt])
+  @@map("user_follows")
 }
 
 model Project {
