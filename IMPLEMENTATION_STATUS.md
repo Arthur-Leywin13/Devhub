@@ -14,6 +14,9 @@ Ce fichier distingue le code présent dans la branche `feat/search-users-messagi
 - [x] Valider les UUID de conversation et les curseurs de pagination, et vérifier qu'un curseur appartient bien à la conversation demandée.
 - [x] Ajouter des tests unitaires pour les validations des messages et identifiants.
 - [x] Ajouter les contrôles CI backend et un build frontend.
+- [x] Limiter la recherche à 60 requêtes par adresse IP sur 15 minutes.
+- [x] Exclure des résultats de recherche les projets dont l'auteur n'est pas actif.
+- [x] Masquer les profils publics et le suivi des comptes suspendus ou bannis.
 
 ## Routes de messagerie
 
@@ -36,7 +39,7 @@ Ce fichier distingue le code présent dans la branche `feat/search-users-messagi
 - [ ] Tester la recherche, profils, suivi et messagerie avec deux comptes sur mobile et ordinateur.
 - [ ] Ajouter pièces jointes, upload sécurisé, notifications temps réel, blocages et reçus de lecture détaillés.
 - [ ] Ajouter des modèles/routes réels pour les articles, cours et technologies.
-- [ ] Ajouter une limite de débit dédiée à la recherche et compléter les routes d'administration.
+- [ ] Compléter les routes d'administration et tester les permissions de modération.
 
 ## Limites connues — ne pas considérer comme terminé
 
