@@ -1,19 +1,27 @@
-name: Backend checks
+name: Backend and frontend checks
 
 on:
   pull_request:
     paths:
       - "backend/**"
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
+      - "vite.config.*"
       - ".github/workflows/backend-check.yml"
   push:
     branches:
       - main
     paths:
       - "backend/**"
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
+      - "vite.config.*"
       - ".github/workflows/backend-check.yml"
 
 jobs:
-  validate:
+  backend-validate:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -34,3 +42,13 @@ jobs:
       - run: npm run check
       - run: npm run db:generate
       - run: npx prisma validate
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npm run build
