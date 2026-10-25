@@ -81,11 +81,54 @@ conversationsRouter.post('/', async (req, res, next) => {
           create: [{ userId: req.userId }, { userId: otherUserId }],
         },
       },
+      select: { id: true },
+    })
+
+    // Restore membership if one participant previously removed this conversation from their list.
+    await Promise.all([req.userId, otherUserId].map((userId) =>
+      prisma.conversationParticipant.upsert({
+        where: { conversationId_userId: { conversationId: conversation.id, userId } },
+        update: {},
+        create: { conversationId: conversation.id, userId },
+      })
+    ))
+    const fullConversation = await prisma.conversation.findUnique({
+      where: { id: conversation.id },
       include: {
         participants: { include: { user: { select: publicUserSelect } } },
       },
     })
-    res.status(200).json(conversation)
+    res.status(200).json(fullConversation)
+  } catch (error) { next(error) }
+})
+
+// Récupère les métadonnées d'une conversation privée.
+conversationsRouter.get('/:conversationId', async (req, res, next) => {
+  try {
+    const conversation = await prisma.conversation.findFirst({
+      where: {
+        id: req.params.conversationId,
+        participants: { some: { userId: req.userId } },
+      },
+      include: {
+        participants: { include: { user: { select: publicUserSelect } } },
+      },
+    })
+    if (!conversation) return res.status(404).json({ message: 'Conversation introuvable.' })
+    res.json(conversation)
+  } catch (error) { next(error) }
+})
+
+// Retire la conversation de la liste de l'utilisateur courant, sans effacer celle de l'autre participant.
+conversationsRouter.delete('/:conversationId', async (req, res, next) => {
+  try {
+    const membership = await prisma.conversationParticipant.findUnique({
+      where: { conversationId_userId: { conversationId: req.params.conversationId, userId: req.userId } },
+      select: { id: true },
+    })
+    if (!membership) return res.status(404).json({ message: 'Conversation introuvable.' })
+    await prisma.conversationParticipant.delete({ where: { id: membership.id } })
+    res.status(204).end()
   } catch (error) { next(error) }
 })
 
