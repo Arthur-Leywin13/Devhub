@@ -1,5 +1,4 @@
 import { Router } from 'express'
-import { z } from 'zod'
 import { prisma } from '../db/prisma.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 
@@ -41,9 +40,9 @@ usersRouter.get('/id/:id', async (req, res, next) => {
   } catch (error) { next(error) }
 })
 
-usersRouter.get('/:username/follow-status', requireAuth, async (req, res, next) => {
+usersRouter.get('/:id/follow-status', requireAuth, async (req, res, next) => {
   try {
-    const target = await prisma.user.findUnique({ where: { username: req.params.username.toLowerCase() }, select: { id: true } })
+    const target = await prisma.user.findUnique({ where: { id: req.params.id }, select: { id: true } })
     if (!target) return res.status(404).json({ message: 'Profil introuvable.' })
     const following = await prisma.userFollow.findUnique({
       where: { followerId_followingId: { followerId: req.userId, followingId: target.id } },
