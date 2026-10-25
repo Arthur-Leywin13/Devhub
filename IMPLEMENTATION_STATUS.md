@@ -1,39 +1,51 @@
 # DevHub — état d'implémentation
 
-Ce fichier distingue les changements déjà présents dans la branche `feat/search-users-messaging-foundation` des opérations qui nécessitent un accès à l'environnement de déploiement ou une vérification manuelle.
+Ce fichier distingue le code présent dans la branche `feat/search-users-messaging-foundation` des opérations qui nécessitent un accès à l'environnement de déploiement ou une vérification manuelle.
 
 ## Changements de cette branche
 
-- [x] Ajouter un modèle Prisma `UserFollow` avec une contrainte unique par paire d'utilisateurs.
-- [x] Ajouter les routes publiques de profil : `GET /users/:username`, `GET /users/id/:id` et `GET /users/suggested`.
-- [x] Ajouter le suivi et le désabonnement : `POST /users/:id/follow`, `DELETE /users/:id/follow`, `GET /users/:id/follow-status`.
-- [x] Ajouter `GET /search?q=&category=` pour rechercher dans les projets et les utilisateurs réels.
-- [x] Monter les routes `/users` et `/search` dans Express.
-- [x] Inclure les nouvelles routes dans le script de vérification syntaxique.
+- [x] Ajouter le modèle Prisma `UserFollow` avec une contrainte unique par paire d'utilisateurs.
+- [x] Ajouter les profils publics, les suggestions, le suivi et le désabonnement.
+- [x] Ajouter `GET /search?q=&category=` pour rechercher les projets et utilisateurs présents en base.
+- [x] Ajouter les modèles Prisma `Conversation`, `ConversationParticipant` et `Message`.
+- [x] Ajouter les routes de messagerie persistante : liste des conversations, création/récupération d'un échange direct, lecture paginée, envoi, modification et suppression logique des messages, marquage comme lu.
+- [x] Protéger les routes de messagerie par session et vérifier l'appartenance à la conversation avant la lecture ou l'envoi.
+- [x] Monter les routes dans Express et inclure les fichiers dans `npm run check`.
 
-## À faire manuellement avant la mise en production
+## Routes de messagerie ajoutées
 
-- [ ] Exécuter `npm run db:generate` dans le dossier `backend` après récupération de cette branche.
-- [ ] Appliquer et vérifier le changement de schéma sur la base de test : `npm run db:push` dans `backend`. Vérifier la sauvegarde et la bonne base ciblée avant cette commande.
-- [ ] Déployer le backend de cette branche sur un environnement de test, sans écraser la production.
-- [ ] Configurer `VITE_API_URL` côté frontend pour qu'il pointe vers l'API de test, puis redéployer le frontend.
-- [ ] Tester avec deux comptes réels : recherche par nom/pseudo, ouverture d'un profil, suivre, se désabonner, recharger la page et vérifier les compteurs.
-- [ ] Tester les profils bannis, les UUID invalides, la recherche vide et les erreurs de base de données.
-- [ ] Vérifier les résultats de recherche sur mobile et ordinateur.
+- `GET /conversations` — conversations de l'utilisateur connecté.
+- `POST /conversations` avec `{ "userId": "UUID" }` — créer ou retrouver une conversation directe avec un compte actif.
+- `GET /conversations/:conversationId/messages?limit=30&before=UUID` — lire les messages, du plus ancien au plus récent dans la page.
+- `POST /conversations/:conversationId/messages` avec `{ "body": "..." }` — envoyer un message texte.
+- `PATCH /conversations/messages/:messageId` avec `{ "body": "..." }` — modifier son propre message.
+- `DELETE /conversations/messages/:messageId` — supprimer logiquement son propre message.
+- `PATCH /conversations/:conversationId/read` — marquer la conversation comme lue pour soi.
+
+## À faire avant la production
+
+- [ ] Récupérer la branche et exécuter `cd backend && npm run check`.
+- [ ] Exécuter `npm run db:generate`.
+- [ ] Valider le schéma Prisma et appliquer le changement uniquement sur une base de test après avoir vérifié la cible et la sauvegarde.
+- [ ] Ajouter des tests d'intégration avec deux ou trois comptes réels : utilisateur non membre, membre, compte suspendu/banni, création simultanée d'une conversation, pagination, édition/suppression.
+- [ ] Déployer le backend sur un environnement de test puis connecter le frontend à l'API de test.
+- [ ] Tester la recherche, les profils et les actions de suivi avec deux comptes.
+- [ ] Vérifier le rendu mobile/ordinateur et les erreurs réseau.
 
 ## Limites connues — ne pas considérer comme terminé
 
-- La recherche renvoie actuellement des tableaux vides pour les articles, cours et technologies : leurs modèles et routes backend ne sont pas encore connectés à la base.
-- La modification du profil (`PATCH /me`) et certaines routes frontend de compte restent à implémenter.
-- La messagerie privée n'est pas encore connectée à une base réelle. Il reste à créer les modèles Prisma des conversations, participants et messages, les routes `/conversations`, l'autorisation par participant, la persistance, la suppression/modification et le statut de lecture.
-- Les pièces jointes, les notifications en temps réel et l'upload sécurisé ne sont pas implémentés ici.
-- L'espace d'administration frontend n'est pas encore soutenu par des routes backend complètes.
-- Aucun déploiement ni migration de base n'a été effectué par cette modification.
+- Articles, cours et technologies renvoient encore des tableaux vides dans la recherche.
+- Les pièces jointes, l'upload sécurisé, les notifications temps réel et les blocages entre utilisateurs ne sont pas implémentés.
+- La messagerie backend n'est pas encore reliée à l'interface frontend.
+- Le statut de lecture est enregistré au niveau de chaque participant/conversation; il n'y a pas encore de reçu de lecture par message ni de temps réel.
+- La route de recherche n'a pas encore de limite de débit dédiée.
+- L'espace d'administration frontend ne dispose pas encore de toutes les routes backend attendues.
+- Aucun test d'intégration contre une base, aucune migration et aucun déploiement n'ont été effectués par ces modifications.
 
 ## Contrat de recherche
 
-`GET /search?q=arthur&category=...` renvoie un objet avec les clés `projects`, `users`, `articles`, `technologies` et `courses`. Pour l'instant, seuls `projects` et `users` interrogent la base réelle. La recherche vide renvoie des listes vides afin d'éviter une requête trop large.
+`GET /search?q=arthur&category=...` renvoie `projects`, `users`, `articles`, `technologies` et `courses`. Pour l'instant, seuls `projects` et `users` interrogent la base réelle. Une recherche vide renvoie des listes vides.
 
 ## Vérifications
 
-Le script `npm run check` vérifie la syntaxe Node des fichiers backend connus. Il ne remplace pas des tests d'intégration, une validation Prisma, ni un essai contre la base de test.
+`npm run check` ne vérifie que la syntaxe JavaScript. Il ne remplace ni `prisma validate`, ni la génération du client Prisma, ni des tests d'intégration.
