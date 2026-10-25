@@ -3,24 +3,25 @@ import { isMockMode } from './mode'
 import { delay, mockSession, assertCanWrite } from './mockSession'
 import { messagesMock } from '../mocks/messages.mock'
 
-// Contrat attendu :
-// GET  /conversations                          -> Conversation[] (utilisateur connecté)
-// GET  /conversations/:id                       -> Conversation
-// POST /conversations                           { otherUserId } -> Conversation (créée ou existante)
-// DELETE /conversations/:id                     -> 204 (supprime pour MOI uniquement : l'autre
-//                                                  participant garde la conversation)
-// PATCH /conversations/:id                      { wallpaperUrl } -> Conversation
-// GET  /conversations/:id/messages              -> Message[] (messages supprimés : contenu vidé)
-// POST /conversations/:id/messages              { text, attachments } -> Message
-// PATCH /conversations/:id/messages/:messageId  { text } -> Message (auteur uniquement, editedAt renseigné)
-// DELETE /conversations/:id/messages/:messageId -> 204 (auteur uniquement ; contenu effacé pour tous,
-//                                                  le message devient « Message supprimé »)
-// POST /conversations/:id/read                  -> 204
-//
-// Attachment: { type: 'image' | 'audio' | 'video', url, name }
-// En production, `url` doit pointer vers un fichier déjà uploadé (voir
-// section Uploads de BACKEND.md) — le frontend n'envoie jamais le binaire
-// directement dans ce endpoint.
+function mapMessage(message) {
+  return {
+    ...message,
+    text: message.deletedAt ? '' : (message.body ?? message.text ?? ''),
+    attachments: message.attachments || [],
+  }
+}
+
+function mapConversation(conversation) {
+  const participantIds = (conversation.participants || []).map((participant) => participant.userId)
+  const lastMessage = conversation.messages?.[0] ? mapMessage(conversation.messages[0]) : null
+  return {
+    ...conversation,
+    participantIds,
+    wallpaperUrl: null,
+    lastMessage,
+    unreadCount: 0,
+  }
+}
 
 function requireUserId() {
   const id = mockSession.getUserId()
@@ -40,7 +41,7 @@ export const messagesApi = {
       }
       return conv
     }
-    return client.get(`/conversations/${id}`)
+    return mapConversation(await client.get(`/conversations/${id}`))
   },
 
   async getConversations() {
@@ -53,7 +54,8 @@ export const messagesApi = {
         unreadCount: messagesMock.unreadCountFor(c.id, userId),
       }))
     }
-    return client.get('/conversations')
+    const conversations = await client.get('/conversations')
+    return conversations.map(mapConversation)
   },
 
   async getOrCreateConversation(otherUserId) {
@@ -63,7 +65,7 @@ export const messagesApi = {
       const userId = requireUserId()
       return messagesMock.getOrCreateConversation(userId, otherUserId)
     }
-    return client.post('/conversations', { otherUserId })
+    return mapConversation(await client.post('/conversations', { userId: otherUserId }))
   },
 
   async deleteConversation(conversationId) {
@@ -80,17 +82,21 @@ export const messagesApi = {
       await delay()
       return messagesMock.listMessages(conversationId, requireUserId())
     }
-    return client.get(`/conversations/${conversationId}/messages`)
+    const messages = await client.get(`/conversations/${conversationId}/messages`)
+    return messages.map(mapMessage)
   },
 
-  async sendMessage(conversationId, { text, attachments }) {
+  async sendMessage(conversationId, { text, attachments = [] }) {
     if (isMockMode) {
       assertCanWrite()
       await delay(300)
       const userId = requireUserId()
       return messagesMock.sendMessage(conversationId, userId, { text, attachments })
     }
-    return client.post(`/conversations/${conversationId}/messages`, { text, attachments })
+    if (attachments.length) {
+      throw new Error('La messagerie en direct accepte actuellement les messages texte uniquement. Les pièces jointes seront ajoutées ensuite.')
+    }
+    return mapMessage(await client.post(`/conversations/${conversationId}/messages`, { body: text }))
   },
 
   async editMessage(conversationId, messageId, text) {
@@ -99,7 +105,7 @@ export const messagesApi = {
       await delay(250)
       return messagesMock.editMessage(messageId, requireUserId(), text)
     }
-    return client.patch(`/conversations/${conversationId}/messages/${messageId}`, { text })
+    return mapMessage(await client.patch(`/conversations/messages/${messageId}`, { body: text }))
   },
 
   async deleteMessage(conversationId, messageId) {
@@ -109,7 +115,7 @@ export const messagesApi = {
       messagesMock.deleteMessage(messageId, requireUserId())
       return null
     }
-    return client.delete(`/conversations/${conversationId}/messages/${messageId}`)
+    return client.delete(`/conversations/messages/${messageId}`)
   },
 
   async setWallpaper(conversationId, wallpaperUrl) {
@@ -118,7 +124,7 @@ export const messagesApi = {
       await delay(200)
       return messagesMock.setWallpaper(conversationId, wallpaperUrl)
     }
-    return client.patch(`/conversations/${conversationId}`, { wallpaperUrl })
+    throw new Error("Les fonds d'écran personnalisés ne sont pas encore enregistrés dans le backend réel.")
   },
 
   async markRead(conversationId) {
@@ -128,6 +134,6 @@ export const messagesApi = {
       messagesMock.markRead(conversationId, userId)
       return null
     }
-    return client.post(`/conversations/${conversationId}/read`)
+    return client.patch(`/conversations/${conversationId}/read`)
   },
 }
