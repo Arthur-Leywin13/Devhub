@@ -70,7 +70,17 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: 'Trop de tentatives. Réessaie dans quelques minutes.' },
 })
+
+const searchLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 60,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { message: 'Trop de recherches. Réessaie dans quelques minutes.' },
+})
+
 app.use('/auth', authLimiter)
+app.use('/search', searchLimiter)
 
 app.get('/', (_req, res) => res.json({ name: 'DevHub API', status: 'running' }))
 app.use('/health', healthRouter)
