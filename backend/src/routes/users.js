@@ -35,15 +35,18 @@ usersRouter.get('/id/:id', async (req, res, next) => {
       where: { id: req.params.id },
       select: publicUserSelect,
     })
-    if (!user || user.status === 'banned') return res.status(404).json({ message: 'Profil introuvable.' })
+    if (!user || user.status !== 'active') return res.status(404).json({ message: 'Profil introuvable.' })
     res.json(publicProfile(user))
   } catch (error) { next(error) }
 })
 
 usersRouter.get('/:id/follow-status', requireAuth, async (req, res, next) => {
   try {
-    const target = await prisma.user.findUnique({ where: { id: req.params.id }, select: { id: true } })
-    if (!target) return res.status(404).json({ message: 'Profil introuvable.' })
+    const target = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, status: true },
+    })
+    if (!target || target.status !== 'active') return res.status(404).json({ message: 'Profil introuvable.' })
     const following = await prisma.userFollow.findUnique({
       where: { followerId_followingId: { followerId: req.userId, followingId: target.id } },
       select: { id: true },
@@ -59,6 +62,7 @@ usersRouter.get('/:username', async (req, res, next) => {
       select: {
         ...publicUserSelect,
         projects: {
+          where: { author: { status: 'active' } },
           select: {
             id: true, slug: true, name: true, description: true, image: true,
             images: true, tech: true, category: true, github: true, demo: true,
@@ -69,7 +73,7 @@ usersRouter.get('/:username', async (req, res, next) => {
         },
       },
     })
-    if (!user || user.status === 'banned') return res.status(404).json({ message: 'Profil introuvable.' })
+    if (!user || user.status !== 'active') return res.status(404).json({ message: 'Profil introuvable.' })
     res.json(publicProfile(user))
   } catch (error) { next(error) }
 })
