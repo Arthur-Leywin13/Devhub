@@ -1,15 +1,12 @@
 import { Router } from 'express'
-import { z } from 'zod'
+import { reportSchema, reportResolutionSchema, roleChangeSchema } from '../validation/moderation.js'
 import { prisma } from '../db/prisma.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 
 export const adminRouter = Router()
 export const moderationRouter = Router()
 
-const roles = ['user', 'creator', 'moderator', 'admin']
 const rank = { user: 0, creator: 1, moderator: 2, admin: 3 }
-const reportTypes = ['user', 'project', 'article', 'post', 'comment', 'message', 'course']
-const reasons = ['spam', 'harassment', 'inappropriate', 'impersonation', 'copyright', 'dangerous', 'other']
 const staffSelect = { id: true, username: true, name: true, role: true, status: true, avatarUrl: true }
 const publicSelect = { id: true, username: true, name: true, email: true, role: true, status: true, statusReason: true, suspendedUntil: true, avatarUrl: true, bio: true, followersCount: true, followingCount: true, createdAt: true }
 
@@ -102,14 +99,6 @@ function requireSessionIdentity(req, res, next) {
     })
     .catch(next)
 }
-
-const reportSchema = z.object({
-  targetType: z.enum(reportTypes),
-  targetId: z.string().uuid(),
-  reason: z.enum(reasons),
-  details: z.string().trim().max(500).optional(),
-  context: z.object({ conversationId: z.string().uuid() }).optional(),
-})
 
 moderationRouter.post('/reports', async (req, res, next) => {
   try {
@@ -253,7 +242,7 @@ adminRouter.post('/users/:id/restore', requireAuth, (req, res, next) => sanction
 adminRouter.patch('/users/:id/role', requireAuth, async (req, res, next) => {
   try {
     const staff = await actor(req, true)
-    const parsed = z.object({ role: z.enum(roles) }).safeParse(req.body)
+    const parsed = roleChangeSchema.safeParse(req.body)
     if (!parsed.success) return res.status(400).json({ message: 'Rôle invalide.' })
     if (staff.id === req.params.id) return res.status(403).json({ message: 'Vous ne pouvez pas modifier votre propre rôle.' })
     const target = await prisma.user.findUnique({ where: { id: req.params.id }, select: { id: true, role: true } })
@@ -296,7 +285,7 @@ adminRouter.post('/reports/:id/dismiss', requireAuth, async (req, res, next) => 
 adminRouter.post('/reports/:id/resolve', requireAuth, async (req, res, next) => {
   try {
     const staff = await actor(req)
-    const parsed = z.object({ action: z.enum(['warn', 'suspend', 'ban', 'delete_content']), reason: z.string().trim().min(5).max(500), durationDays: z.number().int().min(1).max(365).optional(), deleteContent: z.boolean().optional() }).safeParse(req.body)
+    const parsed = reportResolutionSchema.safeParse(req.body)
     if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0]?.message || 'Résolution invalide.' })
     const { action, reason, durationDays, deleteContent } = parsed.data
     if (action === 'ban' && staff.role !== 'admin') return res.status(403).json({ message: 'Action réservée aux administrateurs.' })
