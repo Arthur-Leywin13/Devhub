@@ -69,6 +69,18 @@ async function enrichReport(report) {
   return { ...report, reporter, resolver, target: target ? { ...target, link: target.link || null } : { label: 'Contenu supprimé', excerpt: '', authorId: null, missing: true }, targetAuthor }
 }
 
+function requireSessionIdentity(req, res, next) {
+  const userId = req.session?.userId
+  if (!userId) return res.status(401).json({ message: 'Connexion requise.' })
+  prisma.user.findUnique({ where: { id: userId }, select: { id: true, status: true } })
+    .then((user) => {
+      if (!user || user.status === 'banned') return res.status(403).json({ message: 'Compte non autorisé.' })
+      req.userId = user.id
+      next()
+    })
+    .catch(next)
+}
+
 const reportSchema = z.object({
   targetType: z.enum(reportTypes),
   targetId: z.string().uuid(),
@@ -106,7 +118,7 @@ moderationRouter.post('/reports', async (req, res, next) => {
   } catch (error) { next(error) }
 })
 
-moderationRouter.get('/me/warnings', requireAuth, async (req, res, next) => {
+moderationRouter.get('/me/warnings', requireSessionIdentity, async (req, res, next) => {
   try {
     const rows = await prisma.userWarning.findMany({
       where: { userId: req.userId, ...(req.query.unacknowledged === 'true' ? { acknowledgedAt: null } : {}) },
@@ -115,7 +127,7 @@ moderationRouter.get('/me/warnings', requireAuth, async (req, res, next) => {
     res.json(rows)
   } catch (error) { next(error) }
 })
-moderationRouter.post('/me/warnings/:id/acknowledge', requireAuth, async (req, res, next) => {
+moderationRouter.post('/me/warnings/:id/acknowledge', requireSessionIdentity, async (req, res, next) => {
   try {
     const result = await prisma.userWarning.updateMany({ where: { id: req.params.id, userId: req.userId, acknowledgedAt: null }, data: { acknowledgedAt: new Date() } })
     if (!result.count) return res.status(404).json({ message: 'Avertissement introuvable ou déjà confirmé.' })
