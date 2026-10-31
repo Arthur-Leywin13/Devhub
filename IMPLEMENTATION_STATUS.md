@@ -20,6 +20,17 @@ Ce fichier distingue le code présent dans la branche `feat/search-users-messagi
 - [x] Exclure des résultats de recherche les projets dont l'auteur n'est pas actif.
 - [x] Masquer les profils publics et le suivi des comptes suspendus ou bannis.
 
+## Routes de cours, administration et modération
+
+- `GET /courses`, `GET /courses/:id`, `POST /courses`.
+- `GET /courses/:id/progress` et `POST /courses/:courseId/lessons/:lessonId/complete`.
+- `GET /courses/:courseId/lessons/:lessonId`, `POST /courses/:id/sections`, `POST /courses/:id/lessons`.
+- `GET /admin/stats`, `GET /admin/users`, `GET /admin/users/:id`.
+- `POST /admin/users/:id/warn|suspend|ban|restore`, `PATCH /admin/users/:id/role` avec contrôles de rôle et journalisation.
+- `GET /admin/reports`, `POST /admin/reports/:id/resolve|dismiss`.
+- `GET /admin/content`, `POST /admin/content/:type/:id/remove`, `GET /admin/audit-log`.
+- `POST /reports`, `GET /me/warnings`, `POST /me/warnings/:id/acknowledge`.
+
 ## Routes de contenu et communauté
 
 - `GET /articles`, `GET /articles/:id`, `POST /articles`.
@@ -45,24 +56,24 @@ Ce fichier distingue le code présent dans la branche `feat/search-users-messagi
 
 ## Vérifications restantes avant la production
 
-- [ ] Vérifier le résultat CI après les derniers changements frontend/backend, y compris les nouveaux tests unitaires.
+- [x] Vérifier le résultat CI pour les contrôles backend, la génération Prisma, la validation du schéma et le build frontend.
 - [ ] Exécuter les tests d'intégration avec deux ou trois comptes : accès non autorisé, membres, compte suspendu/banni, création simultanée, pagination, édition/suppression.
 - [ ] Appliquer le schéma uniquement sur une base de test vérifiée et sauvegardée.
 - [ ] Déployer le backend sur un environnement de test puis connecter le frontend à l'API de test.
 - [ ] Tester la recherche, profils, suivi et messagerie avec deux comptes sur mobile et ordinateur.
 - [ ] Ajouter pièces jointes, upload sécurisé, notifications temps réel, blocages et reçus de lecture détaillés.
-- [ ] Ajouter les modèles/routes réels pour les cours, sections, leçons et progression.
-- [ ] Ajouter les modèles/routes réels pour les signalements, avertissements, sanctions, journal d'audit et administration.
-- [ ] Compléter les routes d'administration et tester les permissions de modération.
+- [x] Ajouter les modèles/routes réels pour les cours, sections, leçons et progression.
+- [x] Ajouter les modèles/routes réels pour les signalements, avertissements, sanctions, journal d'audit et administration.
+- [ ] Tester les permissions de modération et les flux administratifs avec plusieurs rôles.
 
 ## Limites connues — ne pas considérer comme terminé
 
 - La messagerie en mode API réel est actuellement texte uniquement : pièces jointes, stickers, GIF et fonds d'écran ne sont pas persistés.
 - Le statut de lecture est enregistré au niveau de chaque participant/conversation; il n'y a pas de reçu de lecture par message ni de temps réel.
 - Les résultats de recherche pour articles, cours et technologies ne sont pas encore reliés à la base (le modèle Article existe désormais, mais la recherche doit être étendue).
-- Les cours et la progression pédagogique ne sont pas encore persistés.
-- Les routes d'administration et de modération ne sont pas encore implémentées côté backend.
-- Aucun test d'intégration contre une base, aucune migration et aucun déploiement n'ont été effectués par ces modifications.
+- Les cours, sections, leçons et progressions sont désormais persistés, mais les parcours réels doivent encore être testés avec plusieurs comptes.
+- Les routes d'administration et de modération existent; les tests d'intégration et les essais en environnement connecté restent à faire.
+- Aucun test d'intégration contre une base, aucune migration appliquée sur Supabase et aucun déploiement n'ont été effectués par ces modifications.
 
 ## Recherche
 
