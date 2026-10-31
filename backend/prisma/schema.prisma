@@ -27,6 +27,7 @@ model User {
   name                   String                    @db.VarChar(80)
   email                  String                    @unique @db.VarChar(254)
   passwordHash           String?                   @map("password_hash")
+  firebaseUid            String?                   @unique @map("firebase_uid") @db.VarChar(128)
   avatarUrl              String?                   @map("avatar_url")
   bio                    String                    @default("") @db.VarChar(500)
   role                   UserRole                  @default(user)
