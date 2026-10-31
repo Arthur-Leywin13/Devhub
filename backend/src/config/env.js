@@ -9,6 +9,8 @@ const schema = z.object({
   SESSION_DATABASE_URL: z.string().min(1),
   FRONTEND_URL: z.string().url(),
   SESSION_SECRET: z.string().min(32, 'SESSION_SECRET doit contenir au moins 32 caractères.'),
+  FIREBASE_PROJECT_ID: z.string().min(1).optional(),
+  FIREBASE_SERVICE_ACCOUNT_JSON: z.string().min(1).optional(),
 })
 
 const parsed = schema.safeParse(process.env)

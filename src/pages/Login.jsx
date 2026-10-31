@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { Github, Chrome } from 'lucide-react'
+import { Chrome } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import Button from '../components/Button'
 
@@ -79,15 +79,6 @@ export default function Login() {
         <div className="h-px flex-1 bg-line" /> ou <div className="h-px flex-1 bg-line" />
       </div>
 
-      <Button
-        variant="secondary"
-        icon={Github}
-        className="w-full"
-        onClick={() => handleProvider('github')}
-        disabled={!!providerLoading}
-      >
-        {providerLoading === 'github' ? 'Connexion...' : 'Continuer avec GitHub'}
-      </Button>
       <Button
         variant="secondary"
         icon={Chrome}
