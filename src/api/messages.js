@@ -14,12 +14,12 @@ function mapMessage(message) {
 function mapConversation(conversation) {
   const participantIds = conversation.participantIds
     || (conversation.participants || []).map((participant) => participant.userId)
-  const lastMessage = conversation.lastMessage ? mapMessage(conversation.lastMessage) : null
+  const latest = conversation.lastMessage || conversation.messages?.[0] || null
   return {
     ...conversation,
     participantIds,
     wallpaperUrl: conversation.wallpaperUrl ?? null,
-    lastMessage,
+    lastMessage: latest ? mapMessage(latest) : null,
     unreadCount: conversation.unreadCount ?? 0,
   }
 }
@@ -66,7 +66,7 @@ export const messagesApi = {
       const userId = requireUserId()
       return messagesMock.getOrCreateConversation(userId, otherUserId)
     }
-    return mapConversation(await client.post('/conversations', { otherUserId }))
+    return mapConversation(await client.post('/conversations', { userId: otherUserId }))
   },
 
   async deleteConversation(conversationId) {
@@ -97,7 +97,7 @@ export const messagesApi = {
     if (attachments.length) {
       throw new Error('La messagerie en direct accepte actuellement les messages texte uniquement. Les pièces jointes seront ajoutées ensuite.')
     }
-    return mapMessage(await client.post(`/conversations/${conversationId}/messages`, { text }))
+    return mapMessage(await client.post(`/conversations/${conversationId}/messages`, { body: text }))
   },
 
   async editMessage(conversationId, messageId, text) {
@@ -106,7 +106,7 @@ export const messagesApi = {
       await delay(250)
       return messagesMock.editMessage(messageId, requireUserId(), text)
     }
-    return mapMessage(await client.patch(`/conversations/${conversationId}/messages/${messageId}`, { text }))
+    return mapMessage(await client.patch(`/conversations/messages/${messageId}`, { body: text }))
   },
 
   async deleteMessage(conversationId, messageId) {
@@ -116,7 +116,7 @@ export const messagesApi = {
       messagesMock.deleteMessage(messageId, requireUserId())
       return null
     }
-    return client.delete(`/conversations/${conversationId}/messages/${messageId}`)
+    return client.delete(`/conversations/messages/${messageId}`)
   },
 
   async setWallpaper(conversationId, wallpaperUrl) {
@@ -125,7 +125,7 @@ export const messagesApi = {
       await delay(200)
       return messagesMock.setWallpaper(conversationId, wallpaperUrl)
     }
-    return client.patch(`/conversations/${conversationId}`, { wallpaperUrl })
+    throw new Error('Les fonds de conversation ne sont pas encore disponibles en mode API.')
   },
 
   async markRead(conversationId) {
@@ -135,6 +135,6 @@ export const messagesApi = {
       messagesMock.markRead(conversationId, userId)
       return null
     }
-    return client.post(`/conversations/${conversationId}/read`)
+    return client.patch(`/conversations/${conversationId}/read`)
   },
 }
