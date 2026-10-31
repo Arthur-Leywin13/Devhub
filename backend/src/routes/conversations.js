@@ -43,10 +43,22 @@ conversationsRouter.get('/', async (req, res, next) => {
       orderBy: { updatedAt: 'desc' },
       take: 100,
     })
-    res.json(conversations.map((conversation) => ({
-      ...conversation,
-      messages: conversation.messages.map(serializeMessage),
-    })))
+    const conversationsWithUnread = await Promise.all(conversations.map(async (conversation) => {
+      const ownMembership = conversation.participants.find((participant) => participant.userId === req.userId)
+      const unreadCount = await prisma.message.count({
+        where: {
+          conversationId: conversation.id,
+          senderId: { not: req.userId },
+          ...(ownMembership?.lastReadAt ? { createdAt: { gt: ownMembership.lastReadAt } } : {}),
+        },
+      })
+      return {
+        ...conversation,
+        unreadCount,
+        messages: conversation.messages.map(serializeMessage),
+      }
+    }))
+    res.json(conversationsWithUnread)
   } catch (error) { next(error) }
 })
 
