@@ -137,8 +137,9 @@ model Project {
 
   @@index([authorId])
   @@index([category])
-  @@index([createdAt])
   likes               ProjectLike[]
+
+  @@index([createdAt])
   @@map("projects")
 }
 
