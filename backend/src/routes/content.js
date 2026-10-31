@@ -120,7 +120,7 @@ contentRouter.post('/articles', requireAuth, async (req, res, next) => {
   } catch (error) { next(error) }
 })
 
-for (const [resource, type] of [['articles', 'article'], ['posts', 'post']]) {
+for (const [resource, type] of [['projects', 'project'], ['articles', 'article'], ['posts', 'post']]) {
   contentRouter.post(`/${resource}/:id/like`, requireAuth, async (req, res, next) => {
     try {
       const row = await resolveTarget(resource, req.params.id)
