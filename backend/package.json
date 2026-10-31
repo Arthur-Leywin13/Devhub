@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch src/server.js",
-    "check": "node --check src/server.js && node --check src/app.js && node --check src/routes/auth.js && node --check src/routes/projects.js && node --check src/routes/health.js && node --check src/routes/users.js && node --check src/routes/search.js && node --check src/routes/conversations.js && node --check src/routes/content.js && node --check src/routes/courses.js && node --check src/routes/admin.js && node --check src/validation/conversations.js",
+    "check": "node --check src/server.js && node --check src/app.js && node --check src/routes/auth.js && node --check src/routes/projects.js && node --check src/routes/health.js && node --check src/routes/users.js && node --check src/routes/search.js && node --check src/routes/conversations.js && node --check src/routes/content.js && node --check src/routes/courses.js && node --check src/routes/admin.js && node --check src/validation/conversations.js && node --check src/validation/moderation.js",
     "start": "node src/server.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
