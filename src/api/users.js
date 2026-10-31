@@ -6,7 +6,7 @@ import { isStaff } from '../lib/permissions'
 
 // Contrat attendu :
 // GET   /users/:username
-// PATCH /me
+// PATCH /users/me
 // POST  /users/:id/follow
 // DELETE /users/:id/follow
 
@@ -36,7 +36,6 @@ export const usersApi = {
       const user = usersMock.getByUsername(username)
       const viewerId = mockSession.getUserId()
       const viewer = viewerId ? usersMock.getById(viewerId) : null
-      // Un compte banni disparaît du site pour le public (le staff peut toujours le voir).
       if (!user || (user.status === 'banned' && !isStaff(viewer))) {
         const error = new Error('Profil introuvable.')
         error.status = 404
@@ -55,7 +54,7 @@ export const usersApi = {
       if (!id) throw new Error('Non authentifié.')
       return usersMock.update(id, patch)
     }
-    return client.patch('/me', patch)
+    return client.patch('/users/me', patch)
   },
 
   async follow(userId) {
