@@ -1,19 +1,45 @@
 import { Router } from 'express'
+import { z } from 'zod'
 import { prisma } from '../db/prisma.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 
 export const usersRouter = Router()
 
 const publicUserSelect = {
-  id: true, username: true, name: true, avatarUrl: true, bio: true, role: true,
+  id: true, username: true, name: true, email: true, avatarUrl: true, bio: true, role: true,
   status: true, followersCount: true, followingCount: true, createdAt: true,
 }
+
+const profileUpdateSchema = z.object({
+  username: z.string().trim().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/, 'Le pseudo ne peut contenir que des lettres, chiffres et underscores.').optional(),
+  name: z.string().trim().min(1).max(80).optional(),
+  bio: z.string().trim().max(500).optional(),
+  avatarUrl: z.string().trim().max(2048).url().nullable().optional(),
+}).strict().refine((data) => Object.keys(data).length > 0, 'Aucune modification fournie.')
 
 function publicProfile(user) {
   if (!user) return user
   const { statusReason, suspendedUntil, email, passwordHash, ...safe } = user
   return safe
 }
+
+usersRouter.patch('/me', requireAuth, async (req, res, next) => {
+  try {
+    const parsed = profileUpdateSchema.safeParse(req.body)
+    if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0]?.message || 'Profil invalide.' })
+    const data = parsed.data
+    if (data.username) data.username = data.username.toLowerCase()
+    const user = await prisma.user.update({
+      where: { id: req.userId },
+      data,
+      select: publicUserSelect,
+    })
+    res.json(publicProfile(user))
+  } catch (error) {
+    if (error.code === 'P2002') return res.status(409).json({ message: 'Ce pseudo est déjà utilisé.' })
+    next(error)
+  }
+})
 
 usersRouter.get('/suggested', async (req, res, next) => {
   try {
