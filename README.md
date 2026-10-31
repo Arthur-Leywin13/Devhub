@@ -89,7 +89,7 @@ public/wallpapers/  6 fonds d'écran SVG de discussion
 1. Définir `VITE_API_URL` dans `.env`.
 2. Aligner l'API sur `BACKEND.md` (modèles, endpoints, uploads, OAuth, sécurité) ; `DATABASE.txt` résume les tables.
 3. **Uploads** : le frontend appelle déjà `POST /uploads` (multipart) en mode live ; il suffit que l'endpoint existe.
-4. **OAuth** : les boutons Google/GitHub redirigent vers `${VITE_API_URL}/auth/{google|github}?redirect=…` ; tout le flux est côté backend.
+4. **Google** : le navigateur ouvre Firebase Authentication, puis échange l'ID token contre une session DevHub côté backend. GitHub OAuth reste désactivé.
 5. Supprimer `src/mocks/` une fois le backend validé.
 
 ## Documents pour l'équipe backend
