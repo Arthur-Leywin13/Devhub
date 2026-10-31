@@ -20,11 +20,25 @@ npm run build && npm run preview   # production
 ```
 Dépendances : `react`, `react-dom`, `react-router-dom`, `lucide-react` + `vite`, `tailwindcss`, `postcss`, `autoprefixer`.
 
-**Mode mock** : la connexion accepte n'importe quel mot de passe. Comptes de test (saisir le pseudo) : `utilisateur1` = **administrateur** · `utilisateur3` = **modérateur** · `utilisateur2`, `utilisateur4` = créateurs (`utilisateur4` a un avertissement à confirmer). Google/GitHub ouvrent `utilisateur1`. Les données et les fichiers envoyés ne survivent pas au rechargement de la page.
+**Mode mock** : la connexion accepte n'importe quel mot de passe. Comptes de test (saisir le pseudo) : `utilisateur1` = **administrateur** · `utilisateur3` = **modérateur** · `utilisateur2`, `utilisateur4` = créateurs (`utilisateur4` a un avertissement à confirmer). Google ouvre `utilisateur1` en mode mock. Les données et les fichiers envoyés ne survivent pas au rechargement de la page.
+
+
+## Firebase Authentication (Google)
+
+Le bouton Google utilise Firebase Authentication côté navigateur, puis transmet un ID token au backend. Le backend le vérifie avec Firebase Admin, associe l'identité Firebase au compte DevHub (ou crée le compte au premier passage), puis ouvre la session habituelle avec le cookie HttpOnly. Le navigateur ne reçoit jamais de clé de service Firebase.
+
+1. Dans Firebase Console, ouvre le projet `devhub-95d5c` et active **Authentication → Sign-in method → Google**.
+2. Dans **Authentication → Settings → Authorized domains**, ajoute le domaine exact du frontend de production et les domaines de développement nécessaires.
+3. Renseigne les variables `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID` et `VITE_FIREBASE_APP_ID` dans l'environnement du frontend. Les valeurs Web Firebase sont des paramètres client publics ; ne mets jamais le JSON de compte de service dans le frontend.
+4. Dans Firebase Console → **Project settings → Service accounts**, génère une clé privée. Place le JSON complet dans le secret backend `FIREBASE_SERVICE_ACCOUNT_JSON` et définis `FIREBASE_PROJECT_ID=devhub-95d5c`. Ne commite jamais ce JSON.
+5. Après configuration du backend, applique le nouveau champ nullable `users.firebase_uid` à la base PostgreSQL de test avec `npm run db:push` depuis `backend/`. Vérifie d'abord que `DATABASE_URL` et `DIRECT_URL` pointent vers la base de test, jamais vers la production.
+6. Déploie le frontend et le backend, puis teste un premier compte Google, une reconnexion, une déconnexion et la liaison d'une adresse e-mail déjà utilisée.
+
+La première connexion Google crée un compte DevHub si l'adresse vérifiée n'existe pas encore. Si l'adresse correspond à un compte existant, l'identité Firebase est liée à ce compte. Les comptes bannis restent refusés. GitHub OAuth n'est pas activé dans cette intégration.
 
 ## Fonctionnalités
 
-- **Comptes** : connexion/inscription, **Google et GitHub (OAuth)**, routes publiques/privées, rôles (utilisateur, créateur, modérateur, administrateur).
+- **Comptes** : connexion/inscription, connexion Google via Firebase Authentication (jeton vérifié côté backend puis session DevHub HttpOnly), routes publiques/privées, rôles (utilisateur, créateur, modérateur, administrateur).
 - **Projets** : publication avec images (galerie), **vidéo**, fichiers téléchargeables, liens validés, licence (« Aucune » par défaut) ; import GitHub ; likes, commentaires, sauvegarde, partage.
 - **Articles, encyclopédie (catégories cliquables), cours** : sections et leçons **vidéo / texte / vidéo + texte** réellement renseignables, progression.
 - **Fil d'actualité** : publications avec texte, **image ou vidéo, lien** (aperçu), projet/article lié ; page dédiée par publication avec **commentaires** et partage.
@@ -47,6 +61,7 @@ src/
 │   └── *Cache.js   petits caches mémoire (auteurs, projets, articles, posts, technologies)
 ├── mocks/        Données de test génériques — supprimables
 ├── context/      AuthContext (session)
+├── firebase.js   Firebase Web SDK (Google sign-in)
 ├── hooks/        useAuth, useAsync, useProjects, useArticles, useCourses, usePosts,
 │                 useMessages, useStickers, useGifs, useNotifications, useAuthor...
 ├── lib/          url.js (validation de liens), attachments.js (validation + upload),
