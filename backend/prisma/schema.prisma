@@ -42,6 +42,15 @@ model User {
   followers              UserFollow[]              @relation("UserFollowers")
   conversationMemberships ConversationParticipant[]
   sentMessages           Message[]
+  articles               Article[]
+  posts                  Post[]
+  comments               Comment[]
+  projectLikes           ProjectLike[]
+  articleLikes           ArticleLike[]
+  postLikes              PostLike[]
+  savedItems             SavedItem[]
+  notificationsReceived  Notification[]              @relation("NotificationRecipient")
+  notificationsSent      Notification[]              @relation("NotificationActor")
 
   @@index([name])
   @@map("users")
@@ -129,5 +138,131 @@ model Project {
   @@index([authorId])
   @@index([category])
   @@index([createdAt])
+  likes               ProjectLike[]
   @@map("projects")
+}
+
+model ProjectLike {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([userId, createdAt])
+  @@map("project_likes")
+}
+
+model Article {
+  id            String        @id @default(uuid()) @db.Uuid
+  slug          String        @unique @db.VarChar(160)
+  title         String        @db.VarChar(180)
+  excerpt       String        @db.VarChar(500)
+  content       String        @db.Text
+  category      String        @db.VarChar(80)
+  authorId      String        @map("author_id") @db.Uuid
+  image         String?       @db.VarChar(2048)
+  readTime      Int           @default(1) @map("read_time")
+  likesCount    Int           @default(0) @map("likes_count")
+  commentsCount Int           @default(0) @map("comments_count")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+  author        User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  likes         ArticleLike[]
+
+  @@index([authorId, createdAt])
+  @@index([category, createdAt])
+  @@map("articles")
+}
+
+model ArticleLike {
+  id        String   @id @default(uuid()) @db.Uuid
+  articleId String   @map("article_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, userId])
+  @@index([userId, createdAt])
+  @@map("article_likes")
+}
+
+model Post {
+  id              String     @id @default(uuid()) @db.Uuid
+  authorId        String     @map("author_id") @db.Uuid
+  content         String     @db.VarChar(5000)
+  image           String?    @db.VarChar(2048)
+  video           String?    @db.VarChar(2048)
+  link            Json?
+  linkedProjectId String?    @map("linked_project_id") @db.Uuid
+  linkedArticleId String?    @map("linked_article_id") @db.Uuid
+  likesCount      Int        @default(0) @map("likes_count")
+  commentsCount   Int        @default(0) @map("comments_count")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  author          User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  likes           PostLike[]
+
+  @@index([authorId, createdAt])
+  @@index([createdAt])
+  @@map("posts")
+}
+
+model PostLike {
+  id        String   @id @default(uuid()) @db.Uuid
+  postId    String   @map("post_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([userId, createdAt])
+  @@map("post_likes")
+}
+
+model Comment {
+  id         String   @id @default(uuid()) @db.Uuid
+  targetType String   @map("target_type") @db.VarChar(20)
+  targetId   String   @map("target_id") @db.Uuid
+  authorId   String   @map("author_id") @db.Uuid
+  text       String   @db.VarChar(2000)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([targetType, targetId, createdAt])
+  @@index([authorId, createdAt])
+  @@map("comments")
+}
+
+model SavedItem {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  targetType String   @map("target_type") @db.VarChar(20)
+  targetId   String   @map("target_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetType, targetId])
+  @@index([userId, createdAt])
+  @@map("saved_items")
+}
+
+model Notification {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  actorId     String?  @map("actor_id") @db.Uuid
+  type        String   @db.VarChar(40)
+  targetLabel String?  @map("target_label") @db.VarChar(180)
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+  user        User     @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  actor       User?    @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([userId, read, createdAt])
+  @@map("notifications")
 }
