@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Github, Chrome } from 'lucide-react'
+import { Chrome } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import Button from '../components/Button'
 
@@ -43,6 +43,7 @@ export default function Register() {
       <div className="text-center">
         <h1 className="font-display text-xl font-semibold text-text-hi">Créer votre compte</h1>
         <p className="mt-1 text-sm text-text-mid">Rejoignez la communauté DevHub.</p>
+        <p className="mt-2 text-xs text-text-low">Vous pouvez créer votre compte automatiquement avec Google.</p>
       </div>
 
       {error && <p className="rounded-lg bg-state-danger/10 px-3 py-2 text-center text-sm text-state-danger">{error}</p>}
@@ -80,15 +81,6 @@ export default function Register() {
         <div className="h-px flex-1 bg-line" /> ou <div className="h-px flex-1 bg-line" />
       </div>
 
-      <Button
-        variant="secondary"
-        icon={Github}
-        className="w-full"
-        onClick={() => handleProvider('github')}
-        disabled={!!providerLoading}
-      >
-        {providerLoading === 'github' ? 'Connexion...' : 'Continuer avec GitHub'}
-      </Button>
       <Button
         variant="secondary"
         icon={Chrome}
