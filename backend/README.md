@@ -12,7 +12,7 @@ Ce dossier contient le début du backend réel de DevHub. Il complète le fronte
 - Route `GET /health` qui vérifie PostgreSQL.
 - CORS limité à `FRONTEND_URL`, cookies HttpOnly et limitation des tentatives de connexion.
 
-Ce n'est pas encore le backend complet : articles, cours, publications, commentaires, messagerie, notifications, uploads, OAuth et administration restent à implémenter. Les contrôles de modération et les permissions devront être complétés et testés avant une mise en production.
+Ce n'est pas encore le backend complet : articles, cours, publications, commentaires, messagerie, notifications, uploads et plusieurs fonctions d'administration restent à implémenter. La connexion Google via Firebase est préparée, mais nécessite encore les secrets et l'activation du fournisseur. Les contrôles de modération et les permissions devront être complétés et testés avant une mise en production.
 
 ## Démarrer dans GitHub Codespaces sans fichier .env
 
