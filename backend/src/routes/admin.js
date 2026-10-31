@@ -53,9 +53,31 @@ async function notify(tx, userId, actorId, type, targetLabel) {
   await tx.notification.create({ data: { userId, actorId, type, targetLabel } })
 }
 async function removeTarget(tx, type, id) {
-  if (type === 'message') return tx.message.update({ where: { id }, data: { body: '', deletedAt: new Date() } })
-  const model = ({ project: tx.project, article: tx.article, post: tx.post, comment: tx.comment, course: tx.course })[type]
+  if (type === 'message') {
+    return tx.message.update({ where: { id }, data: { body: '', deletedAt: new Date() } })
+  }
+
+  if (type === 'comment') {
+    const comment = await tx.comment.findUnique({ where: { id }, select: { id: true, targetType: true, targetId: true } })
+    if (!comment) throw fail(404, 'Commentaire introuvable.')
+    const targetModel = ({ project: tx.project, article: tx.article, post: tx.post })[comment.targetType]
+    if (targetModel) {
+      await targetModel.updateMany({
+        where: { id: comment.targetId, commentsCount: { gt: 0 } },
+        data: { commentsCount: { decrement: 1 } },
+      })
+    }
+    return tx.comment.delete({ where: { id } })
+  }
+
+  const model = ({ project: tx.project, article: tx.article, post: tx.post, course: tx.course })[type]
   if (!model) throw fail(400, 'Ce type de contenu ne peut pas être supprimé.')
+
+  // These relations use polymorphic IDs, so Prisma cannot cascade them.
+  if (['project', 'article', 'post'].includes(type)) {
+    await tx.comment.deleteMany({ where: { targetType: type, targetId: id } })
+    await tx.savedItem.deleteMany({ where: { targetType: type, targetId: id } })
+  }
   return model.delete({ where: { id } })
 }
 async function brief(id) {
