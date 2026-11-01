@@ -31,7 +31,7 @@ jobs:
 
       - name: Push database schema
         working-directory: backend
-        run: npx prisma db push
+        run: npx prisma db push --accept-data-loss
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
