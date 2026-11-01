@@ -4,7 +4,7 @@ Ce fichier distingue le code présent dans la branche `feat/search-users-messagi
 
 ## Changements de cette branche
 
-- [x] Ajouter les profils publics, suggestions, suivi et désabonnement.
+- [x] Ajouter les profils publics, suggestions, suivi et désabonnement.\n- [x] Ajouter la liste des comptes suivis pour la messagerie et limiter la création d'une nouvelle conversation aux comptes suivis.
 - [x] Ajouter `GET /search?q=&category=` pour rechercher les projets et utilisateurs présents en base.
 - [x] Ajouter les modèles Prisma `Conversation`, `ConversationParticipant`, `Message`, `Article`, `Post`, `Comment`, `ProjectLike`, `ArticleLike`, `PostLike`, `SavedItem` et `Notification`.
 - [x] Ajouter les routes d'articles, publications/fil, commentaires, likes, favoris et notifications.
