@@ -403,7 +403,7 @@ model UserSettings {
 // connect-pg-simple session table: keep it in the Prisma schema so db push
 // does not try to remove the existing authentication sessions.
 model UserSession {
-  sid    String   @id @db.VarChar(255)
+  sid    String   @id @db.VarChar
   sess   Json
   expire DateTime @db.Timestamp(6)
 
