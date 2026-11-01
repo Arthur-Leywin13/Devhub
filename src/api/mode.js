@@ -1,9 +1,5 @@
-// Détermine si le frontend parle à un vrai backend (VITE_API_URL défini)
-// ou utilise l'adaptateur mock temporaire (src/mocks/) pendant le développement.
-//
-// Pour brancher le backend réel : définir VITE_API_URL dans .env, rien d'autre
-// à changer dans les pages ou composants.
-
-export const API_MODE = import.meta.env.VITE_API_URL ? 'live' : 'mock'
+// En production, utiliser le backend réel par défaut. En local, garder les mocks
+// tant que VITE_API_URL n'est pas renseignée.
+export const API_MODE = import.meta.env.VITE_API_URL || import.meta.env.PROD ? 'live' : 'mock'
 
 export const isMockMode = API_MODE === 'mock'
