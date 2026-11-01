@@ -41,6 +41,20 @@ usersRouter.patch('/me', requireAuth, async (req, res, next) => {
   }
 })
 
+
+// Liste les comptes actifs que l'utilisateur connecté suit.
+usersRouter.get('/following/me', requireAuth, async (req, res, next) => {
+  try {
+    const follows = await prisma.userFollow.findMany({
+      where: { followerId: req.userId, following: { status: 'active' } },
+      select: { following: { select: publicUserSelect } },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    })
+    res.json(follows.map((item) => publicProfile(item.following)))
+  } catch (error) { next(error) }
+})
+
 usersRouter.get('/suggested', async (req, res, next) => {
   try {
     const limit = Math.min(Math.max(Number(req.query.limit) || 4, 1), 20)
