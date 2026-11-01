@@ -10,6 +10,7 @@ import { healthRouter } from './routes/health.js'
 import { authRouter } from './routes/auth.js'
 import { projectsRouter } from './routes/projects.js'
 import { usersRouter } from './routes/users.js'
+import { settingsRouter } from './routes/settings.js'
 import { searchRouter } from './routes/search.js'
 import { conversationsRouter } from './routes/conversations.js'
 import { contentRouter } from './routes/content.js'
@@ -90,6 +91,7 @@ app.use('/health', healthRouter)
 app.use('/auth', authRouter)
 app.use('/projects', projectsRouter)
 app.use('/users', usersRouter)
+app.use('/settings', settingsRouter)
 app.use('/search', searchRouter)
 app.use('/conversations', conversationsRouter)
 app.use('/courses', coursesRouter)
