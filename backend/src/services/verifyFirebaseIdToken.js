@@ -23,7 +23,6 @@ async function getSigningCertificates(forceRefresh = false) {
     let response
     try {
       response = await fetch(CERTIFICATES_URL, {
-        headers: cachedCertificates && !forceRefresh ? { 'If-None-Match': '' } : {},
         signal: AbortSignal.timeout(8000),
       })
     } catch {
