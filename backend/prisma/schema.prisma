@@ -58,6 +58,7 @@ model User {
   warningsIssued         UserWarning[]                @relation("WarningIssuer")
   reportsFiled           Report[]                     @relation("ReportReporter")
   auditActions            AuditLog[]                   @relation("AuditActor")
+  settings                UserSettings?
 
   @@index([name])
   @@map("users")
@@ -386,4 +387,14 @@ model AuditLog {
   @@index([targetUserId, createdAt])
   @@index([action, createdAt])
   @@map("audit_logs")
+}
+
+
+model UserSettings {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @unique @map("user_id") @db.Uuid
+  preferences Json     @default("{}")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("user_settings")
 }
