@@ -111,7 +111,15 @@ export default function Settings() {
   )
 }
 
-function SettingSelect({ label, value, options, labels, onChange }) { return <label className="flex max-w-md flex-col gap-1.5 text-sm text-text-mid">{label}<select className="input" value={value} onChange={(e) => onChange(e.target.value)}>{options.map((v, i) => <option key={v} value={v}>{labels[i]}</option>)}</select></label> }\n\nfunction SettingToggle({ label, checked, onChange }) { return <label className="flex max-w-md items-center justify-between gap-4 text-sm text-text-mid">{label}<input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} /></label> }\n\nfunction Field({ label, value, onChange, textarea, disabled }) {
+function SettingSelect({ label, value, options, labels, onChange }) {
+  return <label className="flex max-w-md flex-col gap-1.5 text-sm text-text-mid">{label}<select className="input" value={value} onChange={(e) => onChange(e.target.value)}>{options.map((v, index) => <option key={v} value={v}>{labels[index]}</option>)}</select></label>
+}
+
+function SettingToggle({ label, checked, onChange }) {
+  return <label className="flex max-w-md items-center justify-between gap-4 text-sm text-text-mid">{label}<input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} /></label>
+}
+
+function Field({ label, value, onChange, textarea, disabled }) {
   return (
     <label className="flex flex-col gap-1.5 text-sm text-text-mid">
       {label}
