@@ -79,6 +79,20 @@ conversationsRouter.post('/', async (req, res, next) => {
     }
 
     const directKey = [req.userId, otherUserId].sort().join(':')
+    const existingConversation = await prisma.conversation.findUnique({
+      where: { directKey },
+      select: { id: true },
+    })
+    const followsRecipient = await prisma.userFollow.findUnique({
+      where: { followerId_followingId: { followerId: req.userId, followingId: otherUserId } },
+      select: { id: true },
+    })
+    // On peut reprendre une discussion existante après un désabonnement,
+    // mais une nouvelle discussion exige de suivre le destinataire.
+    if (!existingConversation && !followsRecipient) {
+      return res.status(403).json({ message: 'Tu dois suivre cette personne avant de lui écrire.' })
+    }
+
     const conversation = await prisma.conversation.upsert({
       where: { directKey },
       update: {},
