@@ -29,9 +29,22 @@ jobs:
         working-directory: backend
         run: npx prisma generate
 
-      - name: Push database schema
+      - name: Create user settings table without altering existing tables
         working-directory: backend
-        run: npx prisma db push --accept-data-loss
+        run: |
+          cat <<'SQL' | npx prisma db execute --stdin --schema prisma/schema.prisma
+          CREATE TABLE IF NOT EXISTS "user_settings" (
+            "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+            "user_id" UUID NOT NULL,
+            "preferences" JSONB NOT NULL DEFAULT '{}'::jsonb,
+            "updated_at" TIMESTAMP(3) NOT NULL,
+            CONSTRAINT "user_settings_pkey" PRIMARY KEY ("id"),
+            CONSTRAINT "user_settings_user_id_key" UNIQUE ("user_id"),
+            CONSTRAINT "user_settings_user_id_fkey"
+              FOREIGN KEY ("user_id") REFERENCES "users"("id")
+              ON DELETE CASCADE ON UPDATE CASCADE
+          );
+          SQL
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
