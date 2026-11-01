@@ -92,12 +92,19 @@ export default function Settings() {
           </form>
         )}
         {active !== 'compte' && (
-          <div className="flex flex-col gap-2">
-            <h2 className="font-display text-lg font-semibold text-text-hi">
-              {sections.find((s) => s.id === active)?.label}
-            </h2>
-            <p className="text-sm text-text-mid">Les réglages de cette section apparaîtront ici une fois le backend connecté.</p>
-          </div>
+          <section className="flex flex-col gap-5">
+            <h2 className="font-display text-lg font-semibold text-text-hi">{sections.find((s) => s.id === active)?.label}</h2>
+            {loadingPreferences && <p className="text-sm text-text-mid">Chargement des préférences…</p>}
+            {error && <p role="alert" className="text-sm text-state-danger">{error}</p>}
+            {active === 'apparence' && <SettingSelect label="Thème" value={preferences.theme} options={['dark','light','system']} labels={['Sombre','Clair','Système']} onChange={(v) => savePreferences({ theme: v })} />}
+            {active === 'langue' && <SettingSelect label="Langue préférée" value={preferences.language} options={['fr','en','es','pt']} labels={['Français','English','Español','Português']} onChange={(v) => savePreferences({ language: v })} />}
+            {active === 'notifications' && <><SettingToggle label="Notifications dans DevHub" checked={preferences.inAppNotifications} onChange={(v) => savePreferences({ inAppNotifications: v })} /><SettingToggle label="Notifications par e-mail" checked={preferences.emailNotifications} onChange={(v) => savePreferences({ emailNotifications: v })} /></>}
+            {active === 'confidentialite' && <><SettingSelect label="Visibilité du profil" value={preferences.profileVisibility} options={['public','private']} labels={['Public','Privé']} onChange={(v) => savePreferences({ profileVisibility: v })} /><SettingToggle label="Afficher mon activité" checked={preferences.showActivity} onChange={(v) => savePreferences({ showActivity: v })} /></>}
+            {active === 'securite' && <p className="text-sm text-text-mid">La modification du mot de passe et la gestion des sessions ne sont pas encore disponibles.</p>}
+            {active === 'connexions' && <p className="text-sm text-text-mid">La connexion Google est disponible lors de la connexion avec Google. La gestion des fournisseurs liés sera ajoutée séparément.</p>}
+            {active === 'apropos' && <div className="text-sm text-text-mid"><p>DevHub — plateforme communautaire pour développeurs.</p><p className="mt-2">Projets, articles, discussions et apprentissage.</p></div>}
+            {saved && <p className="text-xs text-state-success">Préférences enregistrées.</p>}
+          </section>
         )}
       </div>
     </div>
