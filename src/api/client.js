@@ -1,8 +1,7 @@
-// Client HTTP central. Utilisé uniquement lorsque VITE_API_URL est défini
-// (voir mode dans ./mode.js). Aucune page ni composant ne doit importer
-// "fetch" directement — tout passe par ce client, via les modules du dossier api/.
-
-const API_URL = import.meta.env.VITE_API_URL || ''
+// Client HTTP central. Toutes les requêtes passent par ce module.
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD ? 'https://devhub-4u58.onrender.com' : '')
 
 function toQueryString(params) {
   if (!params || Object.keys(params).length === 0) return ''
@@ -16,8 +15,6 @@ function toQueryString(params) {
 
 async function request(path, options = {}) {
   const { headers, ...rest } = options
-  // Pour un upload (FormData), le navigateur doit définir lui-même le
-  // Content-Type (avec la frontière multipart) : on ne l'impose donc pas.
   const isFormData = typeof FormData !== 'undefined' && rest.body instanceof FormData
 
   const res = await fetch(`${API_URL}${path}`, {
@@ -35,7 +32,7 @@ async function request(path, options = {}) {
       const body = await res.json()
       if (body?.message) message = body.message
     } catch {
-      // réponse non-JSON, on garde le message par défaut
+      // Réponse non-JSON : conserver le message HTTP.
     }
     const error = new Error(message)
     error.status = res.status
