@@ -77,7 +77,7 @@ export default function Messages() {
 
   useEffect(() => {
     let active = true
-    usersApi.getSuggested(50, currentUser?.id)
+    usersApi.getFollowing()
       .then((items) => { if (active) setPeople(items || []) })
       .catch((err) => { if (active) setPeopleError(err.message || 'Impossible de charger les utilisateurs.') })
       .finally(() => { if (active) setPeopleLoading(false) })
@@ -112,7 +112,7 @@ export default function Messages() {
           <MessageSquare className="text-accent-blue" size={22} />
           <h1 className="font-display text-2xl font-semibold text-text-hi">Messagerie</h1>
         </div>
-        <p className="mt-1 text-sm text-text-mid">Retrouvez vos discussions ou commencez à écrire à la communauté.</p>
+        <p className="mt-1 text-sm text-text-mid">Retrouve tes discussions et écris directement aux personnes que tu suis.</p>
       </div>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
@@ -142,7 +142,7 @@ export default function Messages() {
         <section className="min-w-0">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-text-hi">
-              <Users size={16} /> Découvrir des personnes
+              <Users size={16} /> Personnes que tu suis
             </h2>
             <span className="text-xs text-text-low">{filteredPeople.length} résultat(s)</span>
           </div>
@@ -170,10 +170,10 @@ export default function Messages() {
               ))}
             </div>
           ) : (
-            <EmptyState icon={query ? Search : Users} title={query ? 'Aucun utilisateur trouvé' : 'Aucun utilisateur à afficher'} description={query ? 'Essayez un autre nom ou pseudo.' : 'Les nouveaux membres apparaîtront ici.'} />
+            <EmptyState icon={query ? Search : Users} title={query ? 'Aucun utilisateur trouvé' : 'Aucun utilisateur à afficher'} description={query ? 'Essayez un autre nom ou pseudo.' : 'Les comptes que tu suis apparaîtront ici.'} />
           )}
           <Link to="/explorer" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-accent-blue hover:underline">
-            Explorer la communauté <ArrowUpRight size={14} />
+            Trouver des personnes à suivre <ArrowUpRight size={14} />
           </Link>
         </section>
       </div>
