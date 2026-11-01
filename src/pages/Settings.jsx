@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   User, Palette, Bell, Lock, ShieldCheck, Globe, Link2, Info, LogOut,
 } from 'lucide-react'
@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth'
 import { usersApi } from '../api/users'
 import { invalidateUserCache } from '../api/usersCache'
 import Button from '../components/Button'
+import { settingsApi } from '../api/settings'
 
 const sections = [
   { id: 'compte', label: 'Compte', icon: User },
@@ -24,6 +25,19 @@ export default function Settings() {
   const [form, setForm] = useState({ name: user.name, bio: user.bio || '' })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [preferences, setPreferences] = useState({ theme: 'dark', language: 'fr', emailNotifications: true, inAppNotifications: true, profileVisibility: 'public', showActivity: true })
+  const [loadingPreferences, setLoadingPreferences] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => { settingsApi.get().then(setPreferences).catch((e) => setError(e.message)).finally(() => setLoadingPreferences(false)) }, [])
+
+  const savePreferences = async (patch) => {
+    setError('')
+    const next = { ...preferences, ...patch }
+    setPreferences(next)
+    try { const result = await settingsApi.update(patch); setPreferences(result); setSaved(true) }
+    catch (e) { setError(e.message); setPreferences(preferences) }
+  }
 
   const handleSave = async (e) => {
     e.preventDefault()
@@ -90,7 +104,7 @@ export default function Settings() {
   )
 }
 
-function Field({ label, value, onChange, textarea, disabled }) {
+function SettingSelect({ label, value, options, labels, onChange }) { return <label className="flex max-w-md flex-col gap-1.5 text-sm text-text-mid">{label}<select className="input" value={value} onChange={(e) => onChange(e.target.value)}>{options.map((v, i) => <option key={v} value={v}>{labels[i]}</option>)}</select></label> }\n\nfunction SettingToggle({ label, checked, onChange }) { return <label className="flex max-w-md items-center justify-between gap-4 text-sm text-text-mid">{label}<input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} /></label> }\n\nfunction Field({ label, value, onChange, textarea, disabled }) {
   return (
     <label className="flex flex-col gap-1.5 text-sm text-text-mid">
       {label}
