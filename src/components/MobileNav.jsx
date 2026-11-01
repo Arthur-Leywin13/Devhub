@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom'
-import { Home, Search, Rocket, Newspaper, Plus } from 'lucide-react'
+import { Home, Search, Rocket, Newspaper, Plus, MessageSquare } from 'lucide-react'
 
 const links = [
   { to: '/', icon: Home, end: true },
   { to: '/explorer', icon: Search },
+  { to: '/messages', icon: MessageSquare },
   { to: '/creer', icon: Plus, primary: true },
   { to: '/projets', icon: Rocket },
   { to: '/fil', icon: Newspaper },
@@ -17,6 +18,8 @@ export default function MobileNav() {
           key={to}
           to={to}
           end={end}
+          aria-label={to === '/messages' ? 'Messagerie' : undefined}
+          title={to === '/messages' ? 'Messagerie' : undefined}
           className={({ isActive }) =>
             primary
               ? 'flex h-11 w-11 items-center justify-center rounded-full bg-accent-gradient text-white shadow-glow'
