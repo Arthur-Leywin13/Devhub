@@ -55,7 +55,7 @@ async function getSigningCertificates(forceRefresh = false) {
     const cacheControl = response.headers.get('cache-control') || ''
     const maxAge = Number(cacheControl.match(/max-age=(\\d+)/i)?.[1] || 300)
     cachedCertificates = certificates
-    certificatesExpireAt = Date.now() + Math.max(60, Math.min(maxAge, 86400)) * 1000
+    certificatesExpireAt = Date.now() + Math.max(0, Math.min(maxAge, 86400)) * 1000
     return cachedCertificates
   })()
 
