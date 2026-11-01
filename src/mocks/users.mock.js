@@ -73,6 +73,13 @@ export const usersMock = {
   },
   isFollowing: (followerId, followingId) =>
     follows.some((f) => f.followerId === followerId && f.followingId === followingId),
+  listFollowing: (followerId) => {
+    expireSuspensions()
+    return follows
+      .filter((f) => f.followerId === followerId)
+      .map((f) => users.find((u) => u.id === f.followingId))
+      .filter((u) => u && u.status === 'active')
+  },
   follow: (followerId, followingId) => {
     if (!follows.some((f) => f.followerId === followerId && f.followingId === followingId)) {
       follows.push({ followerId, followingId })
