@@ -1,7 +1,7 @@
 import { NavLink, Link } from 'react-router-dom'
 import {
   Home, Search, BookOpen, Rocket, Newspaper, GraduationCap,
-  User, Bookmark, FolderGit2,
+  User, Bookmark, FolderGit2, MessageSquare,
   Plus, Bell, Settings, HelpCircle, LogOut, ShieldCheck,
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
@@ -19,6 +19,7 @@ const mainLinks = [
 
 const personalLinks = [
   { to: '/mon-profil', label: 'Mon profil', icon: User },
+  { to: '/messages', label: 'Messagerie', icon: MessageSquare },
   { to: '/enregistres', label: 'Enregistrés', icon: Bookmark },
   { to: '/mes-projets', label: 'Mes projets', icon: FolderGit2 },
   { to: '/mes-cours', label: 'Mes cours', icon: GraduationCap },
