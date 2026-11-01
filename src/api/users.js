@@ -22,6 +22,16 @@ export const usersApi = {
     return client.get('/users/suggested', { limit, exclude: excludeId })
   },
 
+  async getFollowing() {
+    if (isMockMode) {
+      await delay()
+      const currentId = mockSession.getUserId()
+      if (!currentId) throw new Error('Non authentifié.')
+      return usersMock.listFollowing(currentId)
+    }
+    return client.get('/users/following/me')
+  },
+
   async getById(id) {
     if (isMockMode) {
       await delay(100)
