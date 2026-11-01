@@ -2,6 +2,11 @@ name: Sync Prisma Database
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/prisma/schema.prisma'
+      - '.github/workflows/prisma-db-push.yml'
 
 jobs:
   sync-database:
