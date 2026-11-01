@@ -2,7 +2,7 @@ import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { prisma } from '../db/prisma.js'
-import { getFirebaseAdminAuth } from '../services/firebaseAdmin.js'
+import { verifyFirebaseIdToken } from '../services/verifyFirebaseIdToken.js'
 
 export const authRouter = Router()
 
@@ -111,7 +111,7 @@ authRouter.post('/firebase', async (req, res, next) => {
 
     let decoded
     try {
-      decoded = await getFirebaseAdminAuth().verifyIdToken(parsed.data.idToken, true)
+      decoded = await verifyFirebaseIdToken(parsed.data.idToken)
     } catch (error) {
       if (error.status) throw error
       return res.status(401).json({ message: 'La session Google a expiré ou n’est pas valide. Reconnectez-vous.' })
