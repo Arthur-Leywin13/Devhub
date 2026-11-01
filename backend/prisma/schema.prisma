@@ -398,3 +398,15 @@ model UserSettings {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@map("user_settings")
 }
+
+ 
+// connect-pg-simple session table: keep it in the Prisma schema so db push
+// does not try to remove the existing authentication sessions.
+model UserSession {
+  sid    String   @id @db.VarChar(255)
+  sess   Json
+  expire DateTime @db.Timestamp(6)
+
+  @@index([expire], map: "IDX_session_expire")
+  @@map("user_sessions")
+}
