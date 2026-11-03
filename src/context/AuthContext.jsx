@@ -6,6 +6,7 @@ const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [authError, setAuthError] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -14,8 +15,11 @@ export function AuthProvider({ children }) {
       .then((u) => {
         if (!cancelled) setUser(u)
       })
-      .catch(() => {
-        if (!cancelled) setUser(null)
+      .catch((error) => {
+        if (!cancelled) {
+          setUser(null)
+          setAuthError(error?.message || 'Impossible de restaurer la session.')
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -58,7 +62,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, isAuthenticated: !!user, login, loginWithProvider, register, logout, refreshUser }}
+      value={{ user, loading, authError, isAuthenticated: !!user, login, loginWithProvider, register, logout, refreshUser }}
     >
       {children}
     </AuthContext.Provider>
