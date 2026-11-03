@@ -40,13 +40,16 @@ export async function signInWithGoogle() {
   return null
 }
 
+export async function getFirebaseRedirectUser() {
+  const auth = getFirebaseAuth()
+  const redirectResult = await getRedirectResult(auth)
+  return redirectResult?.user || null
+}
+
 export async function getFirebaseCurrentUser() {
   const auth = getFirebaseAuth()
   await auth.authStateReady()
-
-  // Consomme le résultat du redirect au retour de Google, si présent.
-  const redirectResult = await getRedirectResult(auth)
-  return redirectResult?.user || auth.currentUser
+  return auth.currentUser
 }
 
 export async function signOutFirebase() {
