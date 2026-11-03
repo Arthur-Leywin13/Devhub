@@ -1,5 +1,11 @@
 import { getApp, getApps, initializeApp } from 'firebase/app'
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth'
+import {
+  getAuth,
+  GoogleAuthProvider,
+  getRedirectResult,
+  signInWithRedirect,
+  signOut,
+} from 'firebase/auth'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -28,14 +34,19 @@ export async function signInWithGoogle() {
   const auth = getFirebaseAuth()
   const provider = new GoogleAuthProvider()
   provider.setCustomParameters({ prompt: 'select_account' })
-  const credential = await signInWithPopup(auth, provider)
-  return credential.user.getIdToken()
+
+  // Le navigateur revient sur l'application après le choix du compte.
+  await signInWithRedirect(auth, provider)
+  return null
 }
 
 export async function getFirebaseCurrentUser() {
   const auth = getFirebaseAuth()
   await auth.authStateReady()
-  return auth.currentUser
+
+  // Consomme le résultat du redirect au retour de Google, si présent.
+  const redirectResult = await getRedirectResult(auth)
+  return redirectResult?.user || auth.currentUser
 }
 
 export async function signOutFirebase() {
