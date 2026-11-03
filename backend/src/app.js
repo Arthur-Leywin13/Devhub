@@ -1,4 +1,6 @@
 import express from 'express'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import cors from 'cors'
 import helmet from 'helmet'
 import session from 'express-session'
@@ -18,6 +20,8 @@ import { coursesRouter } from './routes/courses.js'
 import { adminRouter, moderationRouter } from './routes/admin.js'
 
 const app = express()
+const distDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../dist')
+const api = express.Router()
 const PgStore = pgSession(session)
 const sessionPool = new pg.Pool({
   connectionString: env.SESSION_DATABASE_URL,
@@ -28,7 +32,10 @@ const sessionPool = new pg.Pool({
 if (env.NODE_ENV === 'production') app.set('trust proxy', 1)
 
 app.disable('x-powered-by')
-app.use(helmet())
+app.use(helmet({ contentSecurityPolicy: false }))
+
+// Frontend Vite construit (dist/), servi avant la session pour éviter des accès base inutiles.
+app.use(express.static(distDir, { index: false, maxAge: '1h' }))
 app.use(cors({
   origin: env.FRONTEND_URL,
   credentials: true,
@@ -83,21 +90,29 @@ const searchLimiter = rateLimit({
   message: { message: 'Trop de recherches. Réessaie dans quelques minutes.' },
 })
 
-app.use('/auth', authLimiter)
-app.use('/search', searchLimiter)
+api.use('/auth', authLimiter)
+api.use('/search', searchLimiter)
 
-app.get('/', (_req, res) => res.json({ name: 'DevHub API', status: 'running' }))
-app.use('/health', healthRouter)
-app.use('/auth', authRouter)
-app.use('/projects', projectsRouter)
-app.use('/users', usersRouter)
-app.use('/settings', settingsRouter)
-app.use('/search', searchRouter)
-app.use('/conversations', conversationsRouter)
-app.use('/courses', coursesRouter)
-app.use('/admin', adminRouter)
-app.use('/', moderationRouter)
-app.use('/', contentRouter)
+api.get('/', (_req, res) => res.json({ name: 'DevHub API', status: 'running' }))
+api.use('/health', healthRouter)
+api.use('/auth', authRouter)
+api.use('/projects', projectsRouter)
+api.use('/users', usersRouter)
+api.use('/settings', settingsRouter)
+api.use('/search', searchRouter)
+api.use('/conversations', conversationsRouter)
+api.use('/courses', coursesRouter)
+api.use('/admin', adminRouter)
+api.use('/', moderationRouter)
+api.use('/', contentRouter)
+
+app.use('/api', api)
+app.use('/api', (_req, res) => res.status(404).json({ message: 'Route API introuvable.' }))
+
+// Application React : toute autre requête GET renvoie index.html (routage côté client).
+app.get('/{*splat}', (_req, res, next) => {
+  res.sendFile(path.join(distDir, 'index.html'), (err) => err && next())
+})
 
 app.use((req, res) => res.status(404).json({ message: 'Route API introuvable.' }))
 app.use((err, _req, res, _next) => {

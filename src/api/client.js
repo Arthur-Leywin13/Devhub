@@ -1,7 +1,7 @@
 // Client HTTP central. Toutes les requêtes passent par ce module.
 const API_URL =
   import.meta.env.VITE_API_URL ||
-  (import.meta.env.PROD ? 'https://devhub-4u58.onrender.com' : '')
+  (import.meta.env.PROD ? '/api' : '')
 
 function toQueryString(params) {
   if (!params || Object.keys(params).length === 0) return ''
