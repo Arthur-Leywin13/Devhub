@@ -7,7 +7,7 @@ import Button from '../components/Button'
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login, loginWithProvider, user, loading } = useAuth()
+  const { login, loginWithProvider, user, loading, authError } = useAuth()
   const [form, setForm] = useState({ emailOrUsername: '', password: '' })
   const [submitting, setSubmitting] = useState(false)
   const [providerLoading, setProviderLoading] = useState(null)
@@ -61,6 +61,7 @@ export default function Login() {
       </div>
 
       {error && <p className="rounded-lg bg-state-danger/10 px-3 py-2 text-center text-sm text-state-danger">{error}</p>}
+      {authError && <p className="rounded-lg bg-state-danger/10 px-3 py-2 text-center text-sm text-state-danger">Session : {authError}</p>}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <input
