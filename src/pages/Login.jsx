@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { Chrome } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
@@ -7,7 +7,7 @@ import Button from '../components/Button'
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login, loginWithProvider } = useAuth()
+  const { login, loginWithProvider, user, loading } = useAuth()
   const [form, setForm] = useState({ emailOrUsername: '', password: '' })
   const [submitting, setSubmitting] = useState(false)
   const [providerLoading, setProviderLoading] = useState(null)
@@ -16,6 +16,14 @@ export default function Login() {
   const [error, setError] = useState(
     searchParams.get('error') ? "La connexion avec le service externe a échoué. Réessayez ou utilisez votre email." : null
   )
+
+  // Après le retour de Google, AuthProvider restaure la session.
+  // Si l'utilisateur est connecté, on quitte automatiquement /connexion.
+  useEffect(() => {
+    if (!loading && user) {
+      navigate(location.state?.from?.pathname || '/', { replace: true })
+    }
+  }, [loading, user, navigate, location.state])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
