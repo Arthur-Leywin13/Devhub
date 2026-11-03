@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "vite build && npm --prefix backend install && npm --prefix backend run db:generate",
+    "preview": "vite preview",
+    "start": "npm --prefix backend start"
   },
   "dependencies": {
     "firebase": "^11.10.0",
