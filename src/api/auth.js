@@ -2,7 +2,7 @@ import { client } from './client'
 import { isMockMode } from './mode'
 import { delay, mockSession } from './mockSession'
 import { usersMock } from '../mocks/users.mock'
-import { getFirebaseCurrentUser, signInWithGoogle, signOutFirebase } from '../firebase'
+import { getFirebaseCurrentUser, getFirebaseRedirectUser, signInWithGoogle, signOutFirebase } from '../firebase'
 
 function bannedError(user) {
   const error = new Error(`Ce compte a été banni. Motif : ${user.statusReason || 'non précisé'}.`)
@@ -100,6 +100,15 @@ export const authApi = {
       const id = mockSession.getUserId()
       if (!id) return null
       return usersMock.getById(id)
+    }
+
+    // Traite d'abord le retour OAuth : le backend n'a pas encore reçu
+    // le token Firebase lorsque Google redirige vers le frontend.
+    const redirectUser = await getFirebaseRedirectUser()
+    if (redirectUser) {
+      const idToken = await redirectUser.getIdToken()
+      const { user } = await exchangeFirebaseSession(idToken)
+      return user
     }
 
     try {
