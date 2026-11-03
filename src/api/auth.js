@@ -69,6 +69,10 @@ export const authApi = {
     }
 
     const idToken = await signInWithGoogle()
+    // signInWithRedirect navigue vers Google : l'échange du token
+    // sera effectué au retour, lors de la restauration de la session.
+    if (!idToken) return null
+
     try {
       return await exchangeFirebaseSession(idToken)
     } catch (error) {
